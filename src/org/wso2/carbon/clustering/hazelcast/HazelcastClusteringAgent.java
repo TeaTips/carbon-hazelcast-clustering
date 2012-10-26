@@ -56,7 +56,7 @@ import java.util.Set;
 //import org.apache.axis2.clustering.tribes.OperationMode;
 
 /**
- * TODO: class description
+ * This is the main ClusteringAgent class which is based on Hazelcast
  */
 public class HazelcastClusteringAgent extends ParameterAdapter implements ClusteringAgent {
     private static final Log log = LogFactory.getLog(HazelcastClusteringAgent.class);
