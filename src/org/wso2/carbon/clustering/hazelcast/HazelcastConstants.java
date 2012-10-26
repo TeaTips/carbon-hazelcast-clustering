@@ -18,7 +18,7 @@
 package org.wso2.carbon.clustering.hazelcast;
 
 /**
- * TODO: class description
+ * Constants used in Hazelcast based clustering implementation
  */
 public final class HazelcastConstants {
 

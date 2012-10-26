@@ -32,7 +32,7 @@ import org.wso2.carbon.clustering.hazelcast.util.MemberUtils;
 import java.util.Map;
 
 /**
- * TODO: class description
+ * Multicast based membership scheme based on Hazelcast
  */
 public class MulticastBasedMembershipScheme implements HazelcastMembershipScheme {
     private static final Log log = LogFactory.getLog(MulticastBasedMembershipScheme.class);
@@ -90,7 +90,7 @@ public class MulticastBasedMembershipScheme implements HazelcastMembershipScheme
 
     @Override
     public void setLocalMember(Member localMember) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // Nothing to do
     }
 
     private class MulticastMembershipListener implements MembershipListener {
@@ -98,40 +98,12 @@ public class MulticastBasedMembershipScheme implements HazelcastMembershipScheme
 
         public MulticastMembershipListener() {
             members = MemberUtils.getMembersMap(primaryHazelcastInstance, primaryDomain);
-            /*new Thread(){
-
-                @Override
-                public void run() {
-                    while(true){
-                        System.out.println("Running...");
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                        }
-                        for (Map.Entry<String, org.apache.axis2.clustering.Member> entry : members.entrySet()) {
-                            System.out.println(entry.getKey() + "=" + entry.getValue());
-                        }
-                    }
-
-                }
-            }.start();*/
         }
 
         @Override
         public void memberAdded(MembershipEvent membershipEvent) {
             Member member = membershipEvent.getMember();
             log.info("Member joined [" +  member.getUuid() + "]: " + member.getInetSocketAddress().toString());
-            /*try {
-                        byte[] buff = new byte[1024];
-                        DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(buff));
-                        member.readData(dataInputStream);
-                        System.out.println("++++++ MEMBER DATA=" + new String(buff));
-                        dataInputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                    }
-            */
         }
 
         @Override

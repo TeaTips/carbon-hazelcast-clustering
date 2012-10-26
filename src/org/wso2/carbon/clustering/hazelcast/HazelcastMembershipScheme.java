@@ -22,7 +22,7 @@ import com.hazelcast.core.Member;
 import org.apache.axis2.clustering.MembershipScheme;
 
 /**
- * TODO: class description
+ * MembershipScheme which adds some methods for the Hazelcast based clustering implementation
  */
 public interface HazelcastMembershipScheme extends MembershipScheme {
 

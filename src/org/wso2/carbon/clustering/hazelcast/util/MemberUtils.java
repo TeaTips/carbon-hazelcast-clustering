@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * TODO: class description
+ * Utility methods for member manipulation
  */
 public final class MemberUtils {
     private static final Log log = LogFactory.getLog(MemberUtils.class);

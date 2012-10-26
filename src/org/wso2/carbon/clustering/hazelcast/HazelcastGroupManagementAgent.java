@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * TODO: class description
+ * GroupManagementAgent based on Hazelcast
  */
 public class HazelcastGroupManagementAgent implements GroupManagementAgent {
     private static final Log log = LogFactory.getLog(HazelcastGroupManagementAgent.class);

@@ -39,10 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-//import org.apache.axis2.clustering.Member;
-
 /**
- * TODO: class description
+ * Well-known Address membership scheme based on Hazelcast
  */
 public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
     private static final Log log = LogFactory.getLog(WKABasedMembershipScheme.class);

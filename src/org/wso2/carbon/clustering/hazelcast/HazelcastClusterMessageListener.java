@@ -40,7 +40,7 @@ public class HazelcastClusterMessageListener implements MessageListener<Clusteri
     @Override
     public void onMessage(Message<ClusteringMessage> clusteringMessage) {
         try {
-            log.info("########## Received ClusteringMessage: " + clusteringMessage.getMessageObject());
+            log.info("Received ClusteringMessage: " + clusteringMessage.getMessageObject());
             clusteringMessage.getMessageObject().execute(configurationContext);
         } catch (ClusteringFault e) {
             log.error("Cannot process ClusteringMessage", e);

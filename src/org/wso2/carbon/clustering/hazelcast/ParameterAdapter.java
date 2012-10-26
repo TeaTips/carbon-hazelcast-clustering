@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * TODO: class description
+ * Adapter for {@link ParameterInclude}
  */
 public class ParameterAdapter implements ParameterInclude {
     protected final Map<String, Parameter> parameters = new HashMap<String, Parameter>();

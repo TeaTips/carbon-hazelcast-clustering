@@ -40,8 +40,7 @@ public class HazelcastControlCommandListener implements MessageListener<ControlC
     @Override
     public void onMessage(Message<ControlCommand> controlCommand) {
         try {
-            System.out.println("+++++++++++++" + controlCommand.getSource());
-            log.info("########## Received ControlCommand: " + controlCommand.getMessageObject());
+            log.info("Received ControlCommand: " + controlCommand.getMessageObject());
             controlCommand.getMessageObject().execute(configurationContext);
         } catch (ClusteringFault e) {
             log.error("Cannot process ControlCommand", e);

@@ -53,8 +53,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-//import org.apache.axis2.clustering.tribes.OperationMode;
-
 /**
  * This is the main ClusteringAgent class which is based on Hazelcast
  */
@@ -111,7 +109,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
         GroupConfig groupConfig = primaryHazelcastConfig.getGroupConfig();
         groupConfig.setName(primaryDomain);
         Parameter memberPassword = getParameter(HazelcastConstants.GROUP_PASSWORD);
-        if(memberPassword != null){
+        if (memberPassword != null) {
             groupConfig.setPassword((String) memberPassword.getValue());
         }
 
@@ -171,7 +169,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
                 System.getProperty("carbon.home") + File.separator + "repository" +
                 File.separator + "conf" + File.separator + "hazelcast.properties";
         Properties hazelcastProperties = new Properties();
-        if(new File(hazelcastPropsFileName).exists()){
+        if (new File(hazelcastPropsFileName).exists()) {
             FileInputStream fileInputStream = null;
             try {
                 fileInputStream = new FileInputStream(hazelcastPropsFileName);
@@ -179,7 +177,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
             } catch (IOException e) {
                 log.error("Cannot load properties from file " + hazelcastPropsFileName, e);
             } finally {
-                if(fileInputStream != null){
+                if (fileInputStream != null) {
                     try {
                         fileInputStream.close();
                     } catch (IOException e) {
@@ -219,7 +217,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
             WKABasedMembershipScheme wkaBasedMembershipScheme =
                     (WKABasedMembershipScheme) membershipScheme;
             long start = System.currentTimeMillis();
-            while(!wkaBasedMembershipScheme.areWellKnownMembersAvailable()){
+            while (!wkaBasedMembershipScheme.areWellKnownMembersAvailable()) {
                 if (System.currentTimeMillis() - start > 60000) {
                     log.warn("Waiting for all well-known members to become available");
                     start = System.currentTimeMillis();
