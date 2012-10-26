@@ -273,7 +273,7 @@ public class HazelcastGroupManagementAgent implements GroupManagementAgent {
         }
     }
 
-    private class GroupManagementCommandListener implements MessageListener<GroupManagementCommand> {
+    private static class GroupManagementCommandListener implements MessageListener<GroupManagementCommand> {
         private ConfigurationContext configurationContext;
 
         private GroupManagementCommandListener(ConfigurationContext configurationContext) {
