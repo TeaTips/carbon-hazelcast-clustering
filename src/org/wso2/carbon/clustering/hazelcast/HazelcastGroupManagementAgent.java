@@ -173,7 +173,7 @@ public class HazelcastGroupManagementAgent implements GroupManagementAgent {
             }
             Member member = entryEvent.getValue();
             connectMember(member);
-            MemberUtils.addMember(entryEvent.getValue(), tcpIpConfig, domain, members);
+            MemberUtils.addMember(entryEvent.getValue(), tcpIpConfig);
         }
 
         @Override

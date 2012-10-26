@@ -89,7 +89,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
                 continue;
             }
             if (MemberUtils.canConnect(wkaMember)) {
-                MemberUtils.addMember(wkaMember, tcpIpConfig, primaryDomain, allMembers);
+                MemberUtils.addMember(wkaMember, tcpIpConfig);
                 areWellKnownMembersAvailable = true;
             } else {
                 areWellKnownMembersAvailable = false;
@@ -128,8 +128,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
                     } catch (InterruptedException ignored) {
                     }
                 }
-                MemberUtils.addMember(wkaMember, nwConfig.getJoin().getTcpIpConfig(),
-                                      primaryDomain, allMembers);
+                MemberUtils.addMember(wkaMember, nwConfig.getJoin().getTcpIpConfig());
                 primaryHazelcastInstance.getLifecycleService().restart();
             } catch (Exception e) {
                 log.error("Error while trying to reconnect WKA member", e);
@@ -160,8 +159,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
             InetSocketAddress inetSocketAddress = localMember.getInetSocketAddress();
             if (!member.getHostName().equals(inetSocketAddress.getHostName()) &&
                     member.getPort() != inetSocketAddress.getPort()) {  // Don't add the local member
-                MemberUtils.addMember(member, nwConfig.getJoin().getTcpIpConfig(),
-                                      primaryDomain, allMembers);
+                MemberUtils.addMember(member, nwConfig.getJoin().getTcpIpConfig());
             }
         }
     }
@@ -211,8 +209,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
     private class MemberEntryListener implements EntryListener<String, Member> {
         @Override
         public void entryAdded(EntryEvent<String, Member> entryEvent) {
-            MemberUtils.addMember(entryEvent.getValue(), nwConfig.getJoin().getTcpIpConfig(),
-                                  primaryDomain, allMembers);
+            MemberUtils.addMember(entryEvent.getValue(), nwConfig.getJoin().getTcpIpConfig());
         }
 
         @Override

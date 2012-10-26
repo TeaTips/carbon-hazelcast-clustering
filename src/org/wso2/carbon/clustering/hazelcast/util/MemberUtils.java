@@ -79,16 +79,11 @@ public final class MemberUtils {
     }
 
     public static void addMember(Member member,
-                                 TcpIpConfig config,
-                                 String domain,
-                                 Map<String, Member> allMembers) {
+                                 TcpIpConfig config) {
         String memberStr = member.getHostName() + ":" + member.getPort();
         if (!config.getMembers().contains(memberStr)) {
             config.addMember(memberStr);
             log.info("Added member: " + member);
-            /*if (allMembers != null) {
-                MemberPersistence.serialize(allMembers, domain);
-            }*/
         }
     }
 
