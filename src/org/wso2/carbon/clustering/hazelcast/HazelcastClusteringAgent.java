@@ -61,6 +61,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
     public static final String DEFAULT_SUB_DOMAIN = "__$default";
 
     private Config primaryHazelcastConfig;
+    private HazelcastInstance primaryHazelcastInstance;
 
     private HazelcastMembershipScheme membershipScheme;
     private ConfigurationContext configurationContext;
@@ -143,21 +144,21 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
                 }
             }
         }
-        HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(primaryHazelcastConfig);
+        primaryHazelcastInstance = Hazelcast.newHazelcastInstance(primaryHazelcastConfig);
 
-        membershipScheme.setPrimaryHazelcastInstance(hazelcastInstance);
+        membershipScheme.setPrimaryHazelcastInstance(primaryHazelcastInstance);
 
-        clusteringMessageTopic = hazelcastInstance.getTopic(HazelcastConstants.CLUSTERING_MESSAGE_TOPIC);
+        clusteringMessageTopic = primaryHazelcastInstance.getTopic(HazelcastConstants.CLUSTERING_MESSAGE_TOPIC);
         clusteringMessageTopic.addMessageListener(new HazelcastClusterMessageListener(configurationContext));
-        controlCommandTopic = hazelcastInstance.getTopic(HazelcastConstants.CONTROL_COMMAND_TOPIC);
+        controlCommandTopic = primaryHazelcastInstance.getTopic(HazelcastConstants.CONTROL_COMMAND_TOPIC);
         controlCommandTopic.addMessageListener(new HazelcastControlCommandListener(configurationContext));
 
-        final Member localMember = hazelcastInstance.getCluster().getLocalMember();
+        final Member localMember = primaryHazelcastInstance.getCluster().getLocalMember();
         membershipScheme.setLocalMember(localMember);
         org.apache.axis2.clustering.Member carbonLocalMember =
                 MemberUtils.getLocalMember(primaryDomain, nwConfig.getPublicAddress(), nwConfig.getPort());
         log.info("Local member: [" + localMember.getUuid() + "] - " + carbonLocalMember);
-        MemberUtils.getMembersMap(hazelcastInstance, primaryDomain).put(localMember.getUuid(),
+        MemberUtils.getMembersMap(primaryHazelcastInstance, primaryDomain).put(localMember.getUuid(),
                                                                         carbonLocalMember);
         membershipScheme.joinGroup();
         log.info("Cluster initialization completed");
@@ -306,7 +307,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
     }
 
     public int getAliveMemberCount() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return MemberUtils.getMembersMap(primaryHazelcastInstance, primaryDomain).size();
     }
 
     public void addGroupManagementAgent(GroupManagementAgent agent, String applicationDomain) {
@@ -355,11 +356,11 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
     }
 
     public Set<String> getDomains() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return groupManagementAgents.keySet();
     }
 
     public boolean isCoordinator() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return false;  //todo
     }
 
     public List<ClusteringCommand> sendMessage(ClusteringMessage clusteringMessage,
