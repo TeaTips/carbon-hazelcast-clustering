@@ -18,7 +18,7 @@
 package org.wso2.carbon.clustering.hazelcast.multicast;
 
 /**
- * TODO: class description
+ * Multicast based membership discovery constants
  */
 public final class MulticastConstants {
 
