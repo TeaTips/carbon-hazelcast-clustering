@@ -144,7 +144,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
                 }
             }
         }
-        primaryHazelcastInstance = Hazelcast.newHazelcastInstance(primaryHazelcastConfig);
+        primaryHazelcastInstance = HazelcastInstanceManager.getInstance().init(primaryHazelcastConfig);
 
         membershipScheme.setPrimaryHazelcastInstance(primaryHazelcastInstance);
 

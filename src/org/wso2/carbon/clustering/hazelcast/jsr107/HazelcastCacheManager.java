@@ -19,14 +19,29 @@ package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import javax.cache.Cache;
 import javax.cache.CacheBuilder;
+import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.OptionalFeature;
 import javax.cache.Status;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * TODO: class description
  */
 public class HazelcastCacheManager implements CacheManager {
+    private Map<String, Cache<?, ?>> caches = new ConcurrentHashMap<String, Cache<?, ?>>();
+    private volatile Status status;
+
+    public HazelcastCacheManager() {
+        status = Status.STARTED;
+    }
+
     @Override
     public String getName() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
@@ -39,22 +54,66 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+       /* if (caches.get(cacheName) != null) {
+            throw new CacheException("Cache " + cacheName + " already exists");
+        }
+
+        //TODO: where did these naming constraints come from?
+        if (cacheName == null) {
+            throw new NullPointerException("A cache name must must not be null.");
+        }
+        Pattern searchPattern = Pattern.compile("\\S+");
+        Matcher matcher = searchPattern.matcher(cacheName);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("A cache name must contain one or more non-whitespace characters");
+        }
+
+        return new CacheBuilderImpl<K, V>(cacheName);*/
+        return null;
     }
 
     @Override
     public <K, V> Cache<K, V> getCache(String cacheName) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        Cache<K, V> cache = (Cache<K, V>) caches.get(cacheName);
+        if(cache == null){
+            cache = new CacheImpl<K, V>(cacheName);
+            caches.put(cacheName, cache);
+        }
+        return cache;
+//        if (cache == null)
+//            return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public Iterable<Cache<?, ?>> getCaches() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        HashSet<Cache<?, ?>> set = new HashSet<Cache<?, ?>>();
+        for (Cache<?, ?> cache : caches.values()) {
+            set.add(cache);
+        }
+        return Collections.unmodifiableSet(set);
     }
 
     @Override
     public boolean removeCache(String cacheName) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        if (cacheName == null) {
+            throw new NullPointerException();
+        }
+        Cache<?, ?> oldCache;
+        oldCache = caches.remove(cacheName);
+        if (oldCache != null) {
+            oldCache.stop();
+        }
+
+        return oldCache != null;
     }
 
     @Override

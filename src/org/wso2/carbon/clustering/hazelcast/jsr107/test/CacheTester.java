@@ -21,9 +21,14 @@ import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 
-public class CacheTest {
+public class CacheTester {
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
+        new CacheTest().testCache();
+    }*/
+
+    public boolean testCache() {
+        System.out.println("Cache testing....");
 
         String cacheName = "sampleCache";
         // CacheManager cacheManager = Caching.getCacheManager(); // same as Caching.getCacheManagerFactory().getCacheManager("__default__");
@@ -33,17 +38,24 @@ public class CacheTest {
 //        cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).setStoreByValue(false).build();
 
         String key = "key";
-        Integer value1 = 1;
+
+        Integer value1 = cache.get(key);
+        if(value1 == null){
+            value1 = 0;
+        } else {
+            value1 ++;
+        }
         System.out.println("value1 = " + value1);
         cache.put(key, value1);
         Integer value2 = cache.get(key);
         System.out.println("value2 = " + value2);
 //        assertEquals(value1, value2);
 
-        cache.remove("key");
+
+//        cache.remove("key");
+
 //        assertNull(cache.get("key"));
-
-
+        return false;
     }
 
 }

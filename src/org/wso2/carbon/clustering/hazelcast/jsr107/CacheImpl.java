@@ -17,14 +17,14 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
-import org.jsr107.ri.AbstractCache;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
+import org.wso2.carbon.clustering.hazelcast.HazelcastInstanceManager;
 
 import javax.cache.Cache;
 import javax.cache.CacheConfiguration;
-import javax.cache.CacheLoader;
 import javax.cache.CacheManager;
 import javax.cache.CacheStatistics;
-import javax.cache.CacheWriter;
 import javax.cache.Status;
 import javax.cache.event.CacheEntryListener;
 import javax.cache.mbeans.CacheMXBean;
@@ -38,10 +38,18 @@ import java.util.concurrent.Future;
  */
 public class CacheImpl<K, V> implements Cache<K, V> {
 
+    private String cacheName;
+    private HazelcastInstance hazelcastInstance =
+            HazelcastInstanceManager.getInstance().getHazelcastInstance();
+
+    public CacheImpl(String cacheName) {
+        this.cacheName = cacheName;
+    }
 
     @Override
     public V get(K key) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        IMap<Object, Object> map = hazelcastInstance.getMap("$cache." + cacheName);
+        return (V) map.get(key);
     }
 
     @Override
@@ -72,6 +80,12 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     public void put(K key, V value) {
         //To change body of implemented methods use File | Settings | File Templates.
+
+        //TODO: Get Hazelcast instance, get a map and put
+        // Maintain a Hazelcast map per cache
+        // TODO: Add the tenant information
+        IMap<Object, Object> map = hazelcastInstance.getMap("$cache." + cacheName);
+        map.put(key, value);
     }
 
     @Override
