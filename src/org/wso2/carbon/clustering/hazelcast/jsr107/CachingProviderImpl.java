@@ -27,13 +27,15 @@ import javax.cache.spi.CachingProvider;
  * TODO: class description
  */
 public class CachingProviderImpl implements CachingProvider {
+    private CacheManagerFactoryImpl cacheManagerFactory;
 
     public CachingProviderImpl() {
+        cacheManagerFactory = new CacheManagerFactoryImpl();
     }
 
     @Override
     public CacheManagerFactory getCacheManagerFactory() {
-        return new CacheManagerFactoryImpl();
+        return cacheManagerFactory;
     }
 
     @Override

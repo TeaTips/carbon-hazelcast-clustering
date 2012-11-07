@@ -51,7 +51,6 @@ import java.util.concurrent.Future;
 public class CacheImpl<K, V> implements Cache<K, V> {
     private static final Log log = LogFactory.getLog(CacheImpl.class);
     private String cacheName;
-    private String fullyQualifiedCacheName;
     private CacheManager cacheManager;
     private boolean isLocalCache;
     private Map<K, CacheEntry> distributedCache;
@@ -67,13 +66,12 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     public CacheImpl(String cacheName, CacheManager cacheManager) {
         this.cacheName = cacheName;
-        this.fullyQualifiedCacheName = cacheName;
         this.cacheManager = cacheManager;
         HazelcastInstance hazelcastInstance =
                 HazelcastInstanceManager.getInstance().getHazelcastInstance();
         if (hazelcastInstance != null) {
             log.info("Using Hazelcast based distributed cache");
-            distributedCache = hazelcastInstance.getMap(fullyQualifiedCacheName);
+            distributedCache = hazelcastInstance.getMap(cacheName);
         } else {
             log.info("Using local cache");
             isLocalCache = true;
