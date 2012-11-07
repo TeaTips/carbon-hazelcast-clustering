@@ -18,8 +18,10 @@
 package org.wso2.carbon.clustering.hazelcast.jsr107.test;
 
 import javax.cache.Cache;
+import javax.cache.CacheConfiguration;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import java.util.concurrent.TimeUnit;
 
 public class CacheTester {
 
@@ -35,7 +37,8 @@ public class CacheTester {
 
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
         Cache<String, Integer> cache = cacheManager.getCache(cacheName);
-//        cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).setStoreByValue(false).build();
+        /*cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).setExpiry(CacheConfiguration.ExpiryType.MODIFIED,
+                                                                                      new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).setStoreByValue(false).build();*/
 
         String key = "key";
 
