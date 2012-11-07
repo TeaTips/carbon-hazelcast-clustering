@@ -33,7 +33,7 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
     public CacheManager getCacheManager(String name) {
         CacheManager cacheManager = cacheManagers.get(name);
         if(cacheManager == null){
-            cacheManager = new HazelcastCacheManager();
+            cacheManager = new HazelcastCacheManager(name);
             cacheManagers.put(name, cacheManager);
         }
         return cacheManager;

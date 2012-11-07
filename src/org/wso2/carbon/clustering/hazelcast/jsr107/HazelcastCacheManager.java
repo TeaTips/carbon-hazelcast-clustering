@@ -37,19 +37,21 @@ import java.util.regex.Pattern;
 public class HazelcastCacheManager implements CacheManager {
     private Map<String, Cache<?, ?>> caches = new ConcurrentHashMap<String, Cache<?, ?>>();
     private volatile Status status;
+    private String name;
 
-    public HazelcastCacheManager() {
+    public HazelcastCacheManager(String name) {
+        this.name = name;
         status = Status.STARTED;
     }
 
     @Override
     public String getName() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.name;
     }
 
     @Override
     public Status getStatus() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return status;
     }
 
     @Override
@@ -79,7 +81,7 @@ public class HazelcastCacheManager implements CacheManager {
         }
         Cache<K, V> cache = (Cache<K, V>) caches.get(cacheName);
         if(cache == null){
-            cache = new CacheImpl<K, V>(cacheName);
+            cache = new CacheImpl<K, V>(cacheName, this);
             caches.put(cacheName, cache);
         }
         return cache;

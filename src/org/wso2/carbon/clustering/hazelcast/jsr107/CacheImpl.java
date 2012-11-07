@@ -18,7 +18,8 @@
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.clustering.hazelcast.HazelcastInstanceManager;
 
 import javax.cache.Cache;
@@ -26,40 +27,83 @@ import javax.cache.CacheConfiguration;
 import javax.cache.CacheManager;
 import javax.cache.CacheStatistics;
 import javax.cache.Status;
+import javax.cache.event.CacheEntryCreatedListener;
+import javax.cache.event.CacheEntryEvent;
+import javax.cache.event.CacheEntryExpiredListener;
 import javax.cache.event.CacheEntryListener;
+import javax.cache.event.CacheEntryReadListener;
+import javax.cache.event.CacheEntryRemovedListener;
+import javax.cache.event.CacheEntryUpdatedListener;
 import javax.cache.mbeans.CacheMXBean;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
 /**
  * TODO: class description
  */
+@SuppressWarnings("unchecked")
 public class CacheImpl<K, V> implements Cache<K, V> {
-
+    private static final Log log = LogFactory.getLog(CacheImpl.class);
     private String cacheName;
-    private HazelcastInstance hazelcastInstance =
-            HazelcastInstanceManager.getInstance().getHazelcastInstance();
+    private String fullyQualifiedCacheName;
+    private CacheManager cacheManager;
+    private HazelcastInstance hazelcastInstance;
+    private boolean isLocalCache;
+    private Map<K, V> localCache;
+    private List<CacheEntryListener> cacheEntryListeners = new ArrayList<CacheEntryListener>();
 
-    public CacheImpl(String cacheName) {
+    public CacheImpl(String tenantDomain, String cacheName, CacheManager cacheManager) {
+        this("$cache." + tenantDomain + "#" + cacheName, cacheManager);
         this.cacheName = cacheName;
+        log.info("Created cache " + cacheName + " for tenant " + tenantDomain);
+    }
+
+    public CacheImpl(String cacheName, CacheManager cacheManager) {
+        this.cacheName = cacheName;
+        this.fullyQualifiedCacheName = cacheName;
+        this.cacheManager = cacheManager;
+        hazelcastInstance =
+                HazelcastInstanceManager.getInstance().getHazelcastInstance();
+        if (hazelcastInstance != null) {
+            log.info("Using Hazelcast based distributed cache");
+        } else {
+            log.info("Using local cache");
+            isLocalCache = true;
+            localCache = new ConcurrentHashMap<K, V>();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<K, V> getMap() {
+        return isLocalCache ? localCache : (Map<K, V>) hazelcastInstance.getMap(fullyQualifiedCacheName);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public V get(K key) {
-        IMap<Object, Object> map = hazelcastInstance.getMap("$cache." + cacheName);
-        return (V) map.get(key);
+        return getMap().get(key);
     }
 
     @Override
     public Map<K, V> getAll(Set<? extends K> keys) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        Map<K, V> source = getMap();
+        Map<K, V> destination = new HashMap<K, V>(keys.size());
+        for (K key : keys) {
+            destination.put(key, source.get(key));
+        }
+        return destination;
     }
 
     @Override
     public boolean containsKey(K key) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return getMap().containsKey(key);
     }
 
     @Override
@@ -79,23 +123,89 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void put(K key, V value) {
-        //To change body of implemented methods use File | Settings | File Templates.
-
-        //TODO: Get Hazelcast instance, get a map and put
-        // Maintain a Hazelcast map per cache
-        // TODO: Add the tenant information
-        IMap<Object, Object> map = hazelcastInstance.getMap("$cache." + cacheName);
+        Map<K, V> map = getMap();
+        V oldValue = map.get(key);
         map.put(key, value);
+        if (oldValue == null) {
+            notifyCacheEntryCreated(key, value);
+        }  else {
+            notifyCacheEntryUpdated(key, value);
+        }
+    }
+
+   /* @see CacheEntryCreatedListener
+    * @see CacheEntryUpdatedListener
+    * @see CacheEntryReadListener
+    * @see CacheEntryRemovedListener
+    * @see CacheEntryExpiredListener
+    * */
+    private void notifyCacheEntryCreated(K key, V value) {
+        CacheEntryEvent event = createCacheEntryEvent(key, value);
+        for (CacheEntryListener cacheEntryListener : cacheEntryListeners) {
+            if(cacheEntryListener instanceof CacheEntryCreatedListener){
+                ((CacheEntryCreatedListener) cacheEntryListener).entryCreated(event);
+            }
+        }
+    }
+
+    private void notifyCacheEntryUpdated(K key, V value) {
+        CacheEntryEvent event = createCacheEntryEvent(key, value);
+        for (CacheEntryListener cacheEntryListener : cacheEntryListeners) {
+            if(cacheEntryListener instanceof CacheEntryUpdatedListener){
+                ((CacheEntryUpdatedListener) cacheEntryListener).entryUpdated(event);
+            }
+        }
+    }
+
+    private void notifyCacheEntryRead(K key, V value) {
+        CacheEntryEvent event = createCacheEntryEvent(key, value);
+        for (CacheEntryListener cacheEntryListener : cacheEntryListeners) {
+            if(cacheEntryListener instanceof CacheEntryReadListener){
+                ((CacheEntryReadListener) cacheEntryListener).entryRead(event);
+            }
+        }
+    }
+
+    private void notifyCacheEntryRemoved(K key, V value) {
+        CacheEntryEvent event = createCacheEntryEvent(key, value);
+        for (CacheEntryListener cacheEntryListener : cacheEntryListeners) {
+            if(cacheEntryListener instanceof CacheEntryRemovedListener){
+                ((CacheEntryRemovedListener) cacheEntryListener).entryRemoved(event);
+            }
+        }
+    }
+
+    private void notifyCacheEntryExpired(K key, V value) {
+        CacheEntryEvent event = createCacheEntryEvent(key, value);
+        for (CacheEntryListener cacheEntryListener : cacheEntryListeners) {
+            if(cacheEntryListener instanceof CacheEntryExpiredListener){
+                ((CacheEntryExpiredListener) cacheEntryListener).entryExpired(event);
+            }
+        }
+    }
+
+    private CacheEntryEvent createCacheEntryEvent(K key, V value) {
+        CacheEntryEventImpl event = new CacheEntryEventImpl(this);
+        event.setKey(key);
+        event.setValue(value);
+        return event;
     }
 
     @Override
     public V getAndPut(K key, V value) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        V oldValue = getMap().get(key);
+        put(key, value);
+        if (oldValue == null) {
+            notifyCacheEntryCreated(key, value);
+        } else {
+            notifyCacheEntryUpdated(key, value);
+        }
+        return value;
     }
 
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        getMap().putAll(map);
     }
 
     @Override
@@ -105,7 +215,12 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(K key) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        V value = getMap().remove(key);
+        boolean removed = value != null;
+        if(removed){
+            notifyCacheEntryRemoved(key, value);
+        }
+        return removed;
     }
 
     @Override
@@ -115,7 +230,11 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndRemove(K key) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        V value = getMap().remove(key);
+        if(value != null){
+            notifyCacheEntryRemoved(key, value);
+        }
+        return value;
     }
 
     @Override
@@ -135,12 +254,15 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll(Set<? extends K> keys) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        for (K key : keys) {
+            remove(key);
+        }
     }
 
     @Override
     public void removeAll() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        getMap().clear();
+        //TODO: Notify value removed
     }
 
     @Override
@@ -150,27 +272,53 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean registerCacheEntryListener(CacheEntryListener<? super K, ? super V> cacheEntryListener) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return cacheEntryListeners.add(cacheEntryListener);
     }
 
     @Override
     public boolean unregisterCacheEntryListener(CacheEntryListener<?, ?> cacheEntryListener) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return cacheEntryListeners.remove(cacheEntryListener);
     }
 
     @Override
     public Object invokeEntryProcessor(K key, EntryProcessor<K, V> entryProcessor) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        V v = getMap().get(key);
+        return entryProcessor.process(new MutableEntry<K, V>() {
+            @Override
+            public boolean exists() {
+                return false;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void remove() {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void setValue(V value) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public K getKey() {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public V getValue() {
+                return null;  //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });  //TODO change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public String getName() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.cacheName;
     }
 
     @Override
     public CacheManager getCacheManager() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return cacheManager;
     }
 
     @Override

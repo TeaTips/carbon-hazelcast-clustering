@@ -41,10 +41,6 @@ public class HazelcastInstanceManager {
     }
 
     public HazelcastInstance getHazelcastInstance() {
-        if(hazelcastInstance == null){
-            throw new IllegalStateException("HazelcastInstanceManager has not been initialized. " +
-                                            "Perhaps clustering has been disabled.");
-        }
         return hazelcastInstance;
     }
 
