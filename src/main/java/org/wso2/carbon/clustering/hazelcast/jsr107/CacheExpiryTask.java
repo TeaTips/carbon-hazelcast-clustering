@@ -26,7 +26,6 @@ import javax.cache.CacheManager;
 import javax.cache.Caching;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -50,18 +49,27 @@ public class CacheExpiryTask implements Runnable {
                 Iterable<Cache<?,?>> caches = cacheManager.getCaches();
                 for (Cache<?, ?> cache : caches) {
                     CacheConfiguration cacheConfiguration = cache.getConfiguration();
-                    CacheConfiguration.Duration modifiedExpiryTime =
-                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED);
-                    CacheConfiguration.Duration accessedExpiryTime =
-                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED);
+                    long modifiedExpiryDuration =
+                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED).getDurationAmount();
+                    long accessedExpiryDuration =
+                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED).getDurationAmount();
+
                     Collection<CacheEntry> cacheEntries = ((CacheImpl) cache).getAll();
                     for (CacheEntry entry : cacheEntries) {
                         long lastAccessed = entry.getLastAccessed();
                         long lastModified = entry.getLastModified();
+                        long now = System.currentTimeMillis();
 
                         //TODO: Impl
-                        log.info("Cache:" + cache.getName() + ", entry:" + entry.getKey() + ", lastAccessed: " +
-                                 new Date(lastAccessed) + ", lastModified: " + new Date(lastModified) );
+                        if (log.isDebugEnabled()) {
+                            log.debug("Cache:" + cache.getName() + ", entry:" + entry.getKey() + ", lastAccessed: " +
+                                      new Date(lastAccessed) + ", lastModified: " + new Date(lastModified));
+                        }
+                        if(now - lastAccessed >= accessedExpiryDuration ||
+                           now - lastModified >= modifiedExpiryDuration){
+                            ((CacheImpl)cache).remove(entry.getKey());
+                            log.info("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
+                        }
                     }
                 }
             }

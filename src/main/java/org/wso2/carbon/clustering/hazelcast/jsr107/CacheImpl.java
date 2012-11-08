@@ -96,9 +96,10 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         Map<K, CacheEntry> map = getMap();
         CacheEntry entry = map.get(key);
         V value = null;
-        if(entry != null){
+        if (entry != null) {
             value = (V) entry.getValue();
             map.put(key, entry); // Need to put this back so that the accessed timestamp change is visible throughout the cluster
+            notifyCacheEntryRead(key, value);
         }
         return value;
     }
@@ -152,12 +153,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         }
     }
 
-    /* @see CacheEntryCreatedListener
-   * @see CacheEntryUpdatedListener
-   * @see CacheEntryReadListener
-   * @see CacheEntryRemovedListener
-   * @see CacheEntryExpiredListener
-   * */
     private void notifyCacheEntryCreated(K key, V value) {
         CacheEntryEvent event = createCacheEntryEvent(key, value);
         for (CacheEntryListener cacheEntryListener : cacheEntryListeners) {
@@ -244,11 +239,11 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     @Override
-    public boolean remove(K key) {
-        CacheEntry entry = getMap().remove(key);
+    public boolean remove(Object key) {
+        CacheEntry entry = getMap().remove((K)key);
         boolean removed = entry != null;
         if (removed) {
-            notifyCacheEntryRemoved(key, (V) entry.getValue());
+            notifyCacheEntryRemoved((K)key, (V) entry.getValue());
         }
         return removed;
     }
@@ -333,8 +328,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     private CacheConfiguration<K, V> getDefaultCacheConfiguration() {
         return new CacheConfigurationImpl(true, true, true, true, IsolationLevel.NONE, Mode.NONE,
-                                          new CacheConfiguration.Duration[]{new CacheConfiguration.Duration(TimeUnit.SECONDS, 60),
-                                                                            new CacheConfiguration.Duration(TimeUnit.SECONDS, 60)});
+                                          new CacheConfiguration.Duration[]{new CacheConfiguration.Duration(TimeUnit.MINUTES, 1),
+                                                                            new CacheConfiguration.Duration(TimeUnit.MINUTES, 1)});
     }
 
     @Override
