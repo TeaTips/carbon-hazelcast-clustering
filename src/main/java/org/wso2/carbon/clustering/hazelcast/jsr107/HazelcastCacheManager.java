@@ -19,17 +19,13 @@ package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import javax.cache.Cache;
 import javax.cache.CacheBuilder;
-import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.OptionalFeature;
 import javax.cache.Status;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * TODO: class description
@@ -75,6 +71,7 @@ public class HazelcastCacheManager implements CacheManager {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <K, V> Cache<K, V> getCache(String cacheName) {
         if (status != Status.STARTED) {
             throw new IllegalStateException();

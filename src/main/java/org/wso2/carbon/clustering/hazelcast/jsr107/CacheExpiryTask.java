@@ -49,10 +49,16 @@ public class CacheExpiryTask implements Runnable {
                 Iterable<Cache<?,?>> caches = cacheManager.getCaches();
                 for (Cache<?, ?> cache : caches) {
                     CacheConfiguration cacheConfiguration = cache.getConfiguration();
+
+                    CacheConfiguration.Duration modifiedExpiry =
+                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED);
                     long modifiedExpiryDuration =
-                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED).getDurationAmount();
+                            modifiedExpiry.getTimeUnit().toMillis(modifiedExpiry.getDurationAmount());
+
+                    CacheConfiguration.Duration accessedExpiry =
+                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED);
                     long accessedExpiryDuration =
-                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED).getDurationAmount();
+                            accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
 
                     Collection<CacheEntry> cacheEntries = ((CacheImpl) cache).getAll();
                     for (CacheEntry entry : cacheEntries) {
@@ -60,7 +66,6 @@ public class CacheExpiryTask implements Runnable {
                         long lastModified = entry.getLastModified();
                         long now = System.currentTimeMillis();
 
-                        //TODO: Impl
                         if (log.isDebugEnabled()) {
                             log.debug("Cache:" + cache.getName() + ", entry:" + entry.getKey() + ", lastAccessed: " +
                                       new Date(lastAccessed) + ", lastModified: " + new Date(lastModified));

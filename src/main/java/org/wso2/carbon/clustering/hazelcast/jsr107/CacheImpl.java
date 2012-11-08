@@ -328,8 +328,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     private CacheConfiguration<K, V> getDefaultCacheConfiguration() {
         return new CacheConfigurationImpl(true, true, true, true, IsolationLevel.NONE, Mode.NONE,
-                                          new CacheConfiguration.Duration[]{new CacheConfiguration.Duration(TimeUnit.MINUTES, 1),
-                                                                            new CacheConfiguration.Duration(TimeUnit.MINUTES, 1)});
+                                          new CacheConfiguration.Duration[]{new CacheConfiguration.Duration(TimeUnit.MINUTES, 15),
+                                                                            new CacheConfiguration.Duration(TimeUnit.MINUTES, 15)});
     }
 
     @Override

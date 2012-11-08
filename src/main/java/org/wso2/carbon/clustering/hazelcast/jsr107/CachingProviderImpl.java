@@ -17,8 +17,6 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
-import org.wso2.carbon.clustering.hazelcast.jsr107.CacheManagerFactoryImpl;
-
 import javax.cache.CacheManagerFactory;
 import javax.cache.OptionalFeature;
 import javax.cache.spi.CachingProvider;
