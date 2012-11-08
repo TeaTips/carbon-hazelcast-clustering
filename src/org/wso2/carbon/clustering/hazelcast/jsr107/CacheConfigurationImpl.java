@@ -26,12 +26,13 @@ import javax.cache.OptionalFeature;
 import javax.cache.transaction.IsolationLevel;
 import javax.cache.transaction.Mode;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * TODO: class description
  */
-public class CacheConfigurationImpl implements CacheConfiguration {
+public final class CacheConfigurationImpl implements CacheConfiguration {
     private final boolean readThrough;
     private final boolean writeThrough;
     private final boolean storeByValue;
@@ -106,6 +107,9 @@ public class CacheConfigurationImpl implements CacheConfiguration {
         return timeToLive[type.ordinal()];
     }
 
+    void setExpiry(long expiryTime, TimeUnit timeUnit, ExpiryType type){
+        timeToLive[type.ordinal()] = new Duration(timeUnit, expiryTime);
+    }
 
     /**
      * {@inheritDoc}

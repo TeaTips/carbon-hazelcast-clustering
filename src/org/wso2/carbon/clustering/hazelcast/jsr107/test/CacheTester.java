@@ -50,6 +50,11 @@ public class CacheTester {
         }
         System.out.println("value1 = " + value1);
         cache.put(key, value1);
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         Integer value2 = cache.get(key);
         System.out.println("value2 = " + value2);
 //        assertEquals(value1, value2);

@@ -35,7 +35,11 @@ import javax.cache.event.CacheEntryReadListener;
 import javax.cache.event.CacheEntryRemovedListener;
 import javax.cache.event.CacheEntryUpdatedListener;
 import javax.cache.mbeans.CacheMXBean;
+import javax.cache.transaction.IsolationLevel;
+import javax.cache.transaction.Mode;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -43,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: class description
@@ -55,6 +60,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private boolean isLocalCache;
     private Map<K, CacheEntry> distributedCache;
     private Map<K, CacheEntry> localCache;
+    private CacheConfiguration<K, V> cacheConfiguration;
 
     private List<CacheEntryListener> cacheEntryListeners = new ArrayList<CacheEntryListener>();
 
@@ -88,7 +94,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @SuppressWarnings("unchecked")
     public V get(K key) {
         CacheEntry entry = getMap().get(key);
-        return entry != null? (V) entry.getValue() : null;
+        return entry != null ? (V) entry.getValue() : null;
     }
 
     @Override
@@ -99,6 +105,10 @@ public class CacheImpl<K, V> implements Cache<K, V> {
             destination.put(key, (V) source.get(key).getValue());
         }
         return destination;
+    }
+
+    public Collection<CacheEntry> getAll() {
+        return Collections.unmodifiableCollection(getMap().values());
     }
 
     @Override
@@ -125,11 +135,13 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public void put(K key, V value) {
         Map<K, CacheEntry> map = getMap();
         CacheEntry entry = map.get(key);
-        V oldValue = entry != null? (V) entry.getValue() : null;
-        map.put(key, new CacheEntry(value));
+        V oldValue = entry != null ? (V) entry.getValue() : null;
         if (oldValue == null) {
+            map.put(key, new CacheEntry(key, value));
             notifyCacheEntryCreated(key, value);
         } else {
+            entry.setValue(value);
+            map.put(key, entry);
             notifyCacheEntryUpdated(key, value);
         }
     }
@@ -208,7 +220,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public void putAll(Map<? extends K, ? extends V> map) {
         Map<K, CacheEntry> destination = getMap();
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
-            destination.put(entry.getKey(), new CacheEntry(entry.getValue()));
+            K key = entry.getKey();
+            destination.put(key, new CacheEntry(key, entry.getValue()));
             //TODO: Notify CacheListeners
         }
     }
@@ -217,7 +230,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public boolean putIfAbsent(K key, V value) {
         Map<K, CacheEntry> map = getMap();
         if (!map.containsKey(key)) {
-            map.put(key, new CacheEntry(value));
+            map.put(key, new CacheEntry(key, value));
             notifyCacheEntryCreated(key, value);
             return true;
         }
@@ -237,7 +250,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     public boolean remove(K key, V oldValue) {
         Map<K, CacheEntry> map = getMap();
-        if (map.containsKey(key) && map.get(key).equals(new CacheEntry(oldValue))) {
+        if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
             map.remove(key);
             notifyCacheEntryRemoved(key, oldValue);
             return true;
@@ -259,8 +272,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
         Map<K, CacheEntry> map = getMap();
-        if (map.containsKey(key) && map.get(key).equals(new CacheEntry(oldValue))) {
-            map.put(key, new CacheEntry(newValue));
+        if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
+            map.put(key, new CacheEntry(key, newValue));
             notifyCacheEntryUpdated(key, newValue);
             return true;
         }
@@ -271,7 +284,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public boolean replace(K key, V value) {
         Map<K, CacheEntry> map = getMap();
         if (map.containsKey(key)) {
-            map.put(key, new CacheEntry(value));
+            map.put(key, new CacheEntry(key, value));
             notifyCacheEntryUpdated(key, value);
             return true;
         }
@@ -282,7 +295,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public V getAndReplace(K key, V value) {
         Map<K, CacheEntry> map = getMap();
         if (map.containsKey(key)) {
-            map.put(key, new CacheEntry(value));
+            map.put(key, new CacheEntry(key, value));
             notifyCacheEntryUpdated(key, value);
             return value;
         }
@@ -306,7 +319,16 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public CacheConfiguration<K, V> getConfiguration() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (cacheConfiguration == null) {
+            cacheConfiguration = getDefaultCacheConfiguration();
+        }
+        return cacheConfiguration;
+    }
+
+    private CacheConfiguration<K, V> getDefaultCacheConfiguration() {
+        return new CacheConfigurationImpl(true, true, true, true, IsolationLevel.NONE, Mode.NONE,
+                                          new CacheConfiguration.Duration[]{new CacheConfiguration.Duration(TimeUnit.SECONDS, 60),
+                                                                            new CacheConfiguration.Duration(TimeUnit.SECONDS, 60)});
     }
 
     @Override

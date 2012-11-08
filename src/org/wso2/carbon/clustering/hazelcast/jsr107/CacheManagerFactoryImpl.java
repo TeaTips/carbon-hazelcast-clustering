@@ -20,14 +20,28 @@ package org.wso2.carbon.clustering.hazelcast.jsr107;
 import javax.cache.CacheManager;
 import javax.cache.CacheManagerFactory;
 import javax.cache.CachingShutdownException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: class description
  */
 public class CacheManagerFactoryImpl implements CacheManagerFactory {
+
+    static{
+        ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10);
+        cacheExpiryScheduler.scheduleWithFixedDelay(new CacheExpiryTask(), 0, 30, TimeUnit.SECONDS);
+    }
+
     private Map<String, CacheManager>  cacheManagers = new HashMap<String, CacheManager>();
+
+    public Map<String, CacheManager> getCacheManagers(){
+        return Collections.unmodifiableMap(cacheManagers);
+    }
 
     @Override
     public CacheManager getCacheManager(String name) {

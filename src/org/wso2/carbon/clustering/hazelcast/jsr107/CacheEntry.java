@@ -22,29 +22,35 @@ import java.io.Serializable;
 /**
  * TODO: class description
  */
-public class CacheEntry<V> implements Serializable {
+public class CacheEntry<K, V> implements Serializable {
 
     private static final long serialVersionUID = 1996179870860085427L;
 
+    private K key;
     private V value;
     private long lastAccessed;
     private long lastModified;
 
-    public CacheEntry(V value) {
+    public CacheEntry(K key, V value) {
+        this.key = key;
         this.value = value;
         long now = System.currentTimeMillis();
         this.lastAccessed = now;
         this.lastModified = now;
     }
 
-    public V getValue() {
-        lastAccessed = System.currentTimeMillis();
-        return value;
+    public K getKey() {
+        return key;
     }
 
     public void setValue(V value) {
         lastModified = System.currentTimeMillis();
         this.value = value;
+    }
+
+    public V getValue() {
+        lastAccessed = System.currentTimeMillis();
+        return value;
     }
 
     public long getLastAccessed() {
@@ -59,13 +65,15 @@ public class CacheEntry<V> implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CacheEntry that = (CacheEntry) o;
-        return value.equals(that.value);
 
+        CacheEntry that = (CacheEntry) o;
+        return key.equals(that.key) && value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        int result = key.hashCode();
+        result = 31 * result + value.hashCode();
+        return result;
     }
 }
