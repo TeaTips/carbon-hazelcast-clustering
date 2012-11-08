@@ -93,8 +93,14 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     @SuppressWarnings("unchecked")
     public V get(K key) {
-        CacheEntry entry = getMap().get(key);
-        return entry != null ? (V) entry.getValue() : null;
+        Map<K, CacheEntry> map = getMap();
+        CacheEntry entry = map.get(key);
+        V value = null;
+        if(entry != null){
+            value = (V) entry.getValue();
+            map.put(key, entry); // Need to put this back so that the accessed timestamp change is visible throughout the cluster
+        }
+        return value;
     }
 
     @Override

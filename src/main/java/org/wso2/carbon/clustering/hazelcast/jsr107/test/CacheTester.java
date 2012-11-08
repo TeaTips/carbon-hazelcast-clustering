@@ -24,39 +24,34 @@ import javax.cache.Caching;
 import java.util.concurrent.TimeUnit;
 
 public class CacheTester {
+    private Cache<String, Integer> cache;
 
-    /*public static void main(String[] args) {
-        new CacheTest().testCache();
-    }*/
-
-    public boolean testCache() {
+    public CacheTester() {
         System.out.println("Cache testing....");
 
         String cacheName = "sampleCache";
         // CacheManager cacheManager = Caching.getCacheManager(); // same as Caching.getCacheManagerFactory().getCacheManager("__default__");
 
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
-        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
+        cache = cacheManager.getCache(cacheName);
+    }
+
+    /*public static void main(String[] args) {
+        new CacheTest().testCache();
+    }*/
+
+    public boolean testCache() {
+
         /*cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).setExpiry(CacheConfiguration.ExpiryType.MODIFIED,
                                                                                       new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).setStoreByValue(false).build();*/
 
-        String key = "key";
-
-        Integer value1 = cache.get(key);
-        if(value1 == null){
-            value1 = 0;
-        } else {
-            value1 ++;
-        }
-        System.out.println("value1 = " + value1);
-        cache.put(key, value1);
+        put("key", 1);
         try {
-            Thread.sleep(2000);
+            Thread.sleep(10000);
         } catch (InterruptedException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-        Integer value2 = cache.get(key);
-        System.out.println("value2 = " + value2);
+        System.out.println("value2 = " + get("key"));
 //        assertEquals(value1, value2);
 
 
@@ -65,5 +60,23 @@ public class CacheTester {
 //        assertNull(cache.get("key"));
         return false;
     }
+
+    public void put(String key, int value){
+
+//        Integer value1 = cache.get(key);
+//        System.out.println("value1 = " + value1);
+//        if(value1 == null){
+//            value1 = 0;
+//        } else {
+//            value1 ++;
+//        }
+        cache.put(key, value);
+    }
+
+    public int get(String key){
+        Integer integer = cache.get(key);
+        return integer == null ? 0 : integer;
+    }
+
 
 }
