@@ -79,13 +79,12 @@ public class CacheExpiryTask implements Runnable {
                         }
                     }
                     if(((CacheImpl)cache).isEmpty()){
-                        cache.stop();
                         cacheManager.removeCache(cache.getName());
                     }
                 }
                 if(((HazelcastCacheManager)cacheManager).isEmpty()){
                     cacheManager.shutdown();
-                    cacheManagers.remove(cacheManager.getName());
+                    ((CacheManagerFactoryImpl) Caching.getCacheManagerFactory()).removeCacheManager(cacheManager.getName());
                 }
             }
         } catch (Throwable t) {

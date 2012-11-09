@@ -82,4 +82,8 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
         }
         return false;
     }
+
+    public void removeCacheManager(String name) {
+        cacheManagers.remove(name);
+    }
 }
