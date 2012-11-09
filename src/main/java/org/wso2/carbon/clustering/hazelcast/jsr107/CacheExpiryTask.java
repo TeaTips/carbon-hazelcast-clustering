@@ -62,7 +62,8 @@ public class CacheExpiryTask implements Runnable {
                     long accessedExpiryDuration =
                             accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
 
-                    Collection<CacheEntry> cacheEntries = ((CacheImpl) cache).getAll();
+                    CacheImpl cacheImpl = (CacheImpl) cache;
+                    Collection<CacheEntry> cacheEntries = cacheImpl.getAll();
                     for (CacheEntry entry : cacheEntries) { // All Cache entries in a Cache
                         long lastAccessed = entry.getLastAccessed();
                         long lastModified = entry.getLastModified();
@@ -74,11 +75,11 @@ public class CacheExpiryTask implements Runnable {
                         }
                         if(now - lastAccessed >= accessedExpiryDuration ||
                            now - lastModified >= modifiedExpiryDuration){
-                            ((CacheImpl)cache).remove(entry.getKey());
+                            cacheImpl.expire(entry.getKey());
                             log.info("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
                         }
                     }
-                    if(((CacheImpl)cache).isEmpty()){
+                    if(cacheImpl.isEmpty()){
                         cacheManager.removeCache(cache.getName());
                     }
                 }

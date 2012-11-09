@@ -521,7 +521,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         }
         getMap().clear();
 
-        if(!isLocalCache){
+        if (!isLocalCache) {
             distributedCache.flush();
         }
 
@@ -544,5 +544,14 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     public boolean isEmpty() {
         return getMap().isEmpty();
+    }
+
+    public void expire(K key) {
+        CacheEntry entry = getMap().remove(key);
+        notifyCacheEntryExpired(key, (V) entry.getValue());
+    }
+
+    public void evict(K key) {
+
     }
 }
