@@ -55,4 +55,45 @@ public class CachingTestCase {
         cache.put(key, sampleValue);
         Assert.assertEquals(cache.get(key), sampleValue);
     }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void checkMultipleCacheManagers() {
+        String cacheName = "sampleCache";
+        CacheManager cacheManager1 = Caching.getCacheManagerFactory().getCacheManager("test-1");
+        Cache<String, Integer> cache1 = cacheManager1.getCache(cacheName);
+        int value1 = 9876;
+        cache1.put(key, value1);
+
+        CacheManager cacheManager2 = Caching.getCacheManagerFactory().getCacheManager("test-2");
+        Cache<String, String> cache2 = cacheManager2.getCache(cacheName);
+        String value2 = "Afkham Azeez";
+        cache2.put(key, value2);
+
+
+        Assert.assertEquals((int) cache1.get(key), value1);
+        Assert.assertEquals(cache2.get(key), value2);
+
+        Assert.assertNotEquals(cache1.get(key), value2);
+        Assert.assertNotEquals(cache2.get(key), value1);
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void checkMultipleCaches() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test-1");
+        Cache<String, Integer> cache1 = cacheManager.getCache("sampleCache1");
+        Cache<String, String> cache2 = cacheManager.getCache("sampleCache2");
+
+        int value1 = 9876;
+        String value2 = "Afkham Azeez";
+        cache1.put(key, value1);
+        cache2.put(key, value2);
+
+        Assert.assertEquals((int) cache1.get(key), value1);
+        Assert.assertEquals(cache2.get(key), value2);
+
+        Assert.assertNotEquals(cache1.get(key), value2);
+        Assert.assertNotEquals(cache2.get(key), value1);
+    }
 }

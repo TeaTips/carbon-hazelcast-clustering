@@ -128,7 +128,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private void registerMBean(Object mbeanInstance) {
         String serverPackage = "org.wso2.carbon";
         try {
-            registerMBean(mbeanInstance, serverPackage + ":type=Cache,name=" + cacheName);
+            registerMBean(mbeanInstance, serverPackage + ":type=Cache,manager=" +
+                                         cacheManager.getName() + ",name=" + cacheName);
         } catch (Exception e) {
             String msg = "Could not register " + mbeanInstance.getClass() + " MBean";
             log.error(msg, e);
