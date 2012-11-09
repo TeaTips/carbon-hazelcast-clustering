@@ -21,8 +21,10 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.cache.Cache;
+import javax.cache.CacheConfiguration;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: class description
@@ -71,7 +73,7 @@ public class CachingTestCase {
         cache2.put(key, value2);
 
 
-        Assert.assertEquals((int) cache1.get(key), value1);
+        Assert.assertEquals(cache1.get(key).intValue(), value1);
         Assert.assertEquals(cache2.get(key), value2);
 
         Assert.assertNotEquals(cache1.get(key), value2);
@@ -90,10 +92,23 @@ public class CachingTestCase {
         cache1.put(key, value1);
         cache2.put(key, value2);
 
-        Assert.assertEquals((int) cache1.get(key), value1);
+        Assert.assertEquals(cache1.get(key).intValue(), value1);
         Assert.assertEquals(cache2.get(key), value2);
 
         Assert.assertNotEquals(cache1.get(key), value2);
         Assert.assertNotEquals(cache2.get(key), value1);
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void checkWithCustomCacheConfiguration(){
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+        String cacheName = "sampleCache";
+        cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
+                setExpiry(CacheConfiguration.ExpiryType.MODIFIED, new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).
+                setStoreByValue(false).build();
+        int value = 9876;
+        cache.put(key, value);
+        Assert.assertEquals(cache.get(key).intValue(), value);
     }
 }
