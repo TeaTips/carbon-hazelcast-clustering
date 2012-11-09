@@ -18,6 +18,7 @@
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.clustering.hazelcast.HazelcastInstanceManager;
@@ -65,7 +66,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private String cacheName;
     private CacheManager cacheManager;
     private boolean isLocalCache;
-    private Map<K, CacheEntry> distributedCache;
+    private IMap<K, CacheEntry> distributedCache;
     private Map<K, CacheEntry> localCache;
     private CacheConfiguration<K, V> cacheConfiguration;
 
@@ -125,9 +126,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     private void registerMBean(Object mbeanInstance) {
-        String serverPackage = "org.wso2.carbon";  //TODO:
+        String serverPackage = "org.wso2.carbon";
         try {
-            registerMBean(mbeanInstance, serverPackage + ":type=Cache/" + cacheName);
+            registerMBean(mbeanInstance, serverPackage + ":type=Cache,name=" + cacheName);
         } catch (Exception e) {
             String msg = "Could not register " + mbeanInstance.getClass() + " MBean";
             log.error(msg, e);
@@ -520,6 +521,10 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         }
         getMap().clear();
 
+        if(!isLocalCache){
+            distributedCache.flush();
+        }
+
         // Unregister the cacheMXBean MBean
         MBeanServer mserver = getMBeanServer();
         try {
@@ -535,5 +540,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     public Status getStatus() {
         return status;
+    }
+
+    public boolean isEmpty() {
+        return getMap().isEmpty();
     }
 }

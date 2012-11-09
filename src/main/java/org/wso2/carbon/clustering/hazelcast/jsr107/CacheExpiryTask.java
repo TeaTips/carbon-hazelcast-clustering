@@ -30,6 +30,8 @@ import java.util.Map;
 
 /**
  * TODO: class description
+ *
+ * TODO: Also handle cache eviction - remove items from cache when the cache is full
  */
 public class CacheExpiryTask implements Runnable {
     private static final Log log = LogFactory.getLog(CacheExpiryTask.class);
@@ -76,6 +78,14 @@ public class CacheExpiryTask implements Runnable {
                             log.info("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
                         }
                     }
+                    if(((CacheImpl)cache).isEmpty()){
+                        cache.stop();
+                        cacheManager.removeCache(cache.getName());
+                    }
+                }
+                if(((HazelcastCacheManager)cacheManager).isEmpty()){
+                    cacheManager.shutdown();
+                    cacheManagers.remove(cacheManager.getName());
                 }
             }
         } catch (Throwable t) {

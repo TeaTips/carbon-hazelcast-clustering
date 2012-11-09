@@ -139,4 +139,8 @@ public class HazelcastCacheManager implements CacheManager {
     public <T> T unwrap(Class<T> cls) {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    public boolean isEmpty() {
+        return caches.isEmpty();
+    }
 }
