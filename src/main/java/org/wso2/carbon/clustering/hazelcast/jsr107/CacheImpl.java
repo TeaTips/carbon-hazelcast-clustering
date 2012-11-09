@@ -37,6 +37,11 @@ import javax.cache.event.CacheEntryUpdatedListener;
 import javax.cache.mbeans.CacheMXBean;
 import javax.cache.transaction.IsolationLevel;
 import javax.cache.transaction.Mode;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,6 +56,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * TODO: class description
+ * <p/>
+ * TODO: Cache statistics
  */
 @SuppressWarnings("unchecked")
 public class CacheImpl<K, V> implements Cache<K, V> {
@@ -63,6 +70,10 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private CacheConfiguration<K, V> cacheConfiguration;
 
     private List<CacheEntryListener> cacheEntryListeners = new ArrayList<CacheEntryListener>();
+    private Status status;
+    private CacheStatisticsImpl cacheStatistics;
+    private ObjectName cacheMXBeanObjName;
+    private CacheMXBeanImpl cacheMXBean;
 
     public CacheImpl(String tenantDomain, String cacheName, CacheManager cacheManager) {
         this("$cache." + tenantDomain + "#" + cacheName, cacheManager);
@@ -83,6 +94,45 @@ public class CacheImpl<K, V> implements Cache<K, V> {
             isLocalCache = true;
             localCache = new ConcurrentHashMap<K, CacheEntry>();
         }
+        cacheStatistics = new CacheStatisticsImpl();
+        this.cacheMXBean = new CacheMXBeanImpl(this);
+        registerMBean(cacheMXBean);
+        status = Status.STARTED;
+    }
+
+    private void registerMBean(Object mbeanInstance,
+                               String objectName) throws Exception {
+
+        MBeanServer mserver = getMBeanServer();
+        Set set = mserver.queryNames(new ObjectName(objectName), null);
+        if (set.isEmpty()) {
+            cacheMXBeanObjName = new ObjectName(objectName);
+            mserver.registerMBean(mbeanInstance, cacheMXBeanObjName);
+        } else {
+            log.debug("MBean " + objectName + " already exists");
+            throw new Exception("MBean " + objectName + " already exists");
+        }
+    }
+
+    private MBeanServer getMBeanServer() {
+        MBeanServer mserver;
+        if (MBeanServerFactory.findMBeanServer(null).size() > 0) {
+            mserver = MBeanServerFactory.findMBeanServer(null).get(0);
+        } else {
+            mserver = MBeanServerFactory.createMBeanServer();
+        }
+        return mserver;
+    }
+
+    private void registerMBean(Object mbeanInstance) {
+        String serverPackage = "org.wso2.carbon";  //TODO:
+        try {
+            registerMBean(mbeanInstance, serverPackage + ":type=Cache/" + cacheName);
+        } catch (Exception e) {
+            String msg = "Could not register " + mbeanInstance.getClass() + " MBean";
+            log.error(msg, e);
+            throw new RuntimeException(msg, e);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -93,6 +143,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     @SuppressWarnings("unchecked")
     public V get(K key) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         CacheEntry entry = map.get(key);
         V value = null;
@@ -106,6 +159,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Map<K, V> getAll(Set<? extends K> keys) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> source = getMap();
         Map<K, V> destination = new HashMap<K, V>(keys.size());
         for (K key : keys) {
@@ -115,31 +171,49 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public Collection<CacheEntry> getAll() {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         return Collections.unmodifiableCollection(getMap().values());
     }
 
     @Override
     public boolean containsKey(K key) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         return getMap().containsKey(key);
     }
 
     @Override
     public Future<V> load(K key) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public Future<Map<K, ? extends V>> loadAll(Set<? extends K> keys) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public CacheStatistics getStatistics() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        return cacheStatistics;
     }
 
     @Override
     public void put(K key, V value) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         CacheEntry entry = map.get(key);
         V oldValue = entry != null ? (V) entry.getValue() : null;
@@ -207,6 +281,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndPut(K key, V value) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         V oldValue = (V) getMap().get(key).getValue();
         put(key, value);
         if (oldValue == null) {
@@ -219,6 +296,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> destination = getMap();
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
             K key = entry.getKey();
@@ -229,6 +309,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean putIfAbsent(K key, V value) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         if (!map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
@@ -240,16 +323,22 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(Object key) {
-        CacheEntry entry = getMap().remove((K)key);
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        CacheEntry entry = getMap().remove((K) key);
         boolean removed = entry != null;
         if (removed) {
-            notifyCacheEntryRemoved((K)key, (V) entry.getValue());
+            notifyCacheEntryRemoved((K) key, (V) entry.getValue());
         }
         return removed;
     }
 
     @Override
     public boolean remove(K key, V oldValue) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
             map.remove(key);
@@ -261,6 +350,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndRemove(K key) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         CacheEntry entry = getMap().remove(key);
         if (entry != null) {
             V value = (V) entry.getValue();
@@ -272,6 +364,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
             map.put(key, new CacheEntry(key, newValue));
@@ -283,6 +378,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V value) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         if (map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
@@ -294,6 +392,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndReplace(K key, V value) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         if (map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
@@ -305,6 +406,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll(Set<? extends K> keys) {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         Map<K, CacheEntry> map = getMap();
         for (K key : keys) {
             CacheEntry entry = map.remove(key);
@@ -314,6 +418,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll() {
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
         getMap().clear();
         //TODO: Notify value removed
     }
@@ -395,21 +502,38 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public CacheMXBean getMBean() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return cacheMXBean;
     }
 
     @Override
     public void start() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        if (status == Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        status = Status.STARTED;
     }
 
     @Override
     public void stop() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        getMap().clear();
+
+        // Unregister the cacheMXBean MBean
+        MBeanServer mserver = getMBeanServer();
+        try {
+            mserver.unregisterMBean(cacheMXBeanObjName);
+        } catch (InstanceNotFoundException e) {
+            log.error("Cannot unregister CacheMXBean", e);
+        } catch (MBeanRegistrationException e) {
+            log.error("Cannot unregister CacheMXBean", e);
+        }
+        status = Status.STOPPED;
     }
 
     @Override
     public Status getStatus() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return status;
     }
 }

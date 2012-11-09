@@ -45,9 +45,9 @@ public class CacheExpiryTask implements Runnable {
         try {
             Map<String,CacheManager> cacheManagers =
                     ((CacheManagerFactoryImpl) Caching.getCacheManagerFactory()).getCacheManagers();
-            for (CacheManager cacheManager : cacheManagers.values()) {
+            for (CacheManager cacheManager : cacheManagers.values()) {  // All CacheManagers
                 Iterable<Cache<?,?>> caches = cacheManager.getCaches();
-                for (Cache<?, ?> cache : caches) {
+                for (Cache<?, ?> cache : caches) { // All Caches in a CacheManager
                     CacheConfiguration cacheConfiguration = cache.getConfiguration();
 
                     CacheConfiguration.Duration modifiedExpiry =
@@ -61,7 +61,7 @@ public class CacheExpiryTask implements Runnable {
                             accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
 
                     Collection<CacheEntry> cacheEntries = ((CacheImpl) cache).getAll();
-                    for (CacheEntry entry : cacheEntries) {
+                    for (CacheEntry entry : cacheEntries) { // All Cache entries in a Cache
                         long lastAccessed = entry.getLastAccessed();
                         long lastModified = entry.getLastModified();
                         long now = System.currentTimeMillis();

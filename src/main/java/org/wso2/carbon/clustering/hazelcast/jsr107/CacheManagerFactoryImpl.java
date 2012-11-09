@@ -55,22 +55,31 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
 
     @Override
     public CacheManager getCacheManager(ClassLoader classLoader, String name) {
-        // TODO: Take classloader into consideration
+        // Since we have a single CacheManager, we don't have to take the ClassLoader into consideration
         return getCacheManager(name);
     }
 
     @Override
     public void close() throws CachingShutdownException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        for (CacheManager cacheManager : cacheManagers.values()) {
+            cacheManager.shutdown();
+        }
+        cacheManagers.clear();
     }
 
     @Override
     public boolean close(ClassLoader classLoader) throws CachingShutdownException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        close();
+        return true;
     }
 
     @Override
     public boolean close(ClassLoader classLoader, String name) throws CachingShutdownException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        CacheManager cacheManager = cacheManagers.get(name);
+        if(cacheManager != null){
+            cacheManager.shutdown();
+            return true;
+        }
+        return false;
     }
 }

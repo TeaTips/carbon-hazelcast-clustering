@@ -82,8 +82,6 @@ public class HazelcastCacheManager implements CacheManager {
             caches.put(cacheName, cache);
         }
         return cache;
-//        if (cache == null)
-//            return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
@@ -127,7 +125,14 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public void shutdown() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        for (Cache<?, ?> cache : caches.values()) {
+            try {
+                cache.stop();
+            } catch (Exception ignored) {
+            }
+        }
+        caches.clear();
+        this.status = Status.STOPPED;
     }
 
     @Override
