@@ -17,7 +17,6 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.cache.Cache;
@@ -25,6 +24,11 @@ import javax.cache.CacheConfiguration;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import java.util.concurrent.TimeUnit;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 /**
  * TODO: class description
@@ -47,7 +51,7 @@ public class CachingTestCase {
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
           description = "")
     public void checkNonExistentItem() throws Exception {
-        Assert.assertNull(cache.get(key));
+        assertNull(cache.get(key));
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
@@ -56,7 +60,7 @@ public class CachingTestCase {
     public void checkPut() throws Exception {
         Integer sampleValue = 1245;
         cache.put(key, sampleValue);
-        Assert.assertEquals(cache.get(key), sampleValue);
+        assertEquals(cache.get(key), sampleValue);
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
@@ -74,11 +78,11 @@ public class CachingTestCase {
         cache2.put(key, value2);
 
 
-        Assert.assertEquals(cache1.get(key).intValue(), value1);
-        Assert.assertEquals(cache2.get(key), value2);
+        assertEquals(cache1.get(key).intValue(), value1);
+        assertEquals(cache2.get(key), value2);
 
-        Assert.assertNotEquals(cache1.get(key), value2);
-        Assert.assertNotEquals(cache2.get(key), value1);
+        assertNotEquals(cache1.get(key), value2);
+        assertNotEquals(cache2.get(key), value1);
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
@@ -93,11 +97,11 @@ public class CachingTestCase {
         cache1.put(key, value1);
         cache2.put(key, value2);
 
-        Assert.assertEquals(cache1.get(key).intValue(), value1);
-        Assert.assertEquals(cache2.get(key), value2);
+        assertEquals(cache1.get(key).intValue(), value1);
+        assertEquals(cache2.get(key), value2);
 
-        Assert.assertNotEquals(cache1.get(key), value2);
-        Assert.assertNotEquals(cache2.get(key), value1);
+        assertNotEquals(cache1.get(key), value2);
+        assertNotEquals(cache2.get(key), value1);
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
@@ -110,7 +114,7 @@ public class CachingTestCase {
                 setStoreByValue(false).build();
         int value = 9876;
         cache.put(key, value);
-        Assert.assertEquals(cache.get(key).intValue(), value);
+        assertEquals(cache.get(key).intValue(), value);
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
@@ -141,9 +145,9 @@ public class CachingTestCase {
 
         Cache<Long, SerializableTestObject> cache2 = cacheManager.getCache(cacheName);
 
-        Assert.assertEquals(cache2.get(id).getId(), id);
-        Assert.assertEquals(cache2.get(id).getAddress(), address);
-        Assert.assertEquals(cache2.get(id).getName(), name);
+        assertEquals(cache2.get(id).getId(), id);
+        assertEquals(cache2.get(id).getAddress(), address);
+        assertEquals(cache2.get(id).getName(), name);
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
@@ -154,11 +158,11 @@ public class CachingTestCase {
         String cacheName = "sampleCache";
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
         Cache<Long, SerializableTestObject> cache = cacheManager.getCache(cacheName);
-        Assert.assertNotNull(cache.get(id));
+        assertNotNull(cache.get(id));
 
         Cache<Long, SerializableTestObject> cache2 = cacheManager.getCache(cacheName);
         cache2.remove(id);
-        Assert.assertNull(cache.get(id));
+        assertNull(cache.get(id));
 
     }
 
