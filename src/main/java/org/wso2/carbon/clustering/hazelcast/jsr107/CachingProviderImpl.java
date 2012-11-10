@@ -38,6 +38,6 @@ public class CachingProviderImpl implements CachingProvider {
 
     @Override
     public boolean isSupported(OptionalFeature optionalFeature) {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return true;  //TODO: impl
     }
 }

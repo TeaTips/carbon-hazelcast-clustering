@@ -19,6 +19,7 @@ package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import javax.cache.Cache;
 import javax.cache.CacheBuilder;
+import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.OptionalFeature;
 import javax.cache.Status;
@@ -26,6 +27,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * TODO: class description
@@ -52,7 +55,7 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName) {
-       /* if (caches.get(cacheName) != null) {
+        if (caches.get(cacheName) != null) {
             throw new CacheException("Cache " + cacheName + " already exists");
         }
 
@@ -66,8 +69,7 @@ public class HazelcastCacheManager implements CacheManager {
             throw new IllegalArgumentException("A cache name must contain one or more non-whitespace characters");
         }
 
-        return new CacheBuilderImpl<K, V>(cacheName);*/
-        return null;
+        return new CacheBuilderImpl<K, V>(cacheName, this);
     }
 
     @Override
@@ -140,7 +142,11 @@ public class HazelcastCacheManager implements CacheManager {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    public boolean isEmpty() {
+    boolean isEmpty() {
         return caches.isEmpty();
+    }
+
+    void addCache(CacheImpl cache) {
+        caches.put(cache.getName(), cache);
     }
 }

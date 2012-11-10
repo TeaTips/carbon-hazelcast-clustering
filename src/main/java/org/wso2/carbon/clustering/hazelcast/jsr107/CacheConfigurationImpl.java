@@ -27,19 +27,56 @@ import javax.cache.transaction.IsolationLevel;
 import javax.cache.transaction.Mode;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * TODO: class description
  */
 public final class CacheConfigurationImpl implements CacheConfiguration {
-    private final boolean readThrough;
-    private final boolean writeThrough;
-    private final boolean storeByValue;
-    private final AtomicBoolean statisticsEnabled;
-    private volatile IsolationLevel isolationLevel;
-    private volatile Mode transactionMode;
-    private final CacheConfiguration.Duration[] timeToLive;
+    private static final boolean DEFAULT_READ_THROUGH = false;
+    private static final boolean DEFAULT_WRITE_THROUGH = false;
+    private static final boolean DEFAULT_STATISTICS_ENABLED = false;
+    private static final Duration DEFAULT_TIME_TO_LIVE = Duration.ETERNAL;
+    private static final boolean DEFAULT_STORE_BY_VALUE = true;
+    private static final IsolationLevel DEFAULT_TRANSACTION_ISOLATION_LEVEL = IsolationLevel.NONE;
+    private static final Mode DEFAULT_TRANSACTION_MODE = Mode.NONE;
+
+    /**
+     * read through
+     */
+    protected boolean readThrough = DEFAULT_READ_THROUGH;
+    /**
+     * write through
+     */
+    protected boolean writeThrough = DEFAULT_WRITE_THROUGH;
+    /**
+     * statistics enabled
+     */
+    protected boolean statisticsEnabled = DEFAULT_STATISTICS_ENABLED;
+    /**
+     * duration
+     */
+    protected Duration[] timeToLive;
+
+    /**
+     * store by value
+     */
+    protected boolean storeByValue = DEFAULT_STORE_BY_VALUE;
+
+    /**
+     * isolation level
+     */
+    protected IsolationLevel isolationLevel = DEFAULT_TRANSACTION_ISOLATION_LEVEL;
+
+    /**
+     * transaction mode
+     */
+    protected Mode transactionMode = DEFAULT_TRANSACTION_MODE;
+
+    private CacheLoader cacheLoader;
+    private CacheWriter cacheWriter;
+
+    public CacheConfigurationImpl() {
+    }
 
     /**
      * Constructor
@@ -56,9 +93,33 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
         this.readThrough = readThrough;
         this.writeThrough = writeThrough;
         this.storeByValue = storeByValue;
-        this.statisticsEnabled = new AtomicBoolean(statisticsEnabled);
+        this.statisticsEnabled = statisticsEnabled;
         this.isolationLevel = isolationLevel;
         this.transactionMode = transactionMode;
+        this.timeToLive = timeToLive;
+    }
+
+    void setReadThrough(boolean readThrough) {
+        this.readThrough = readThrough;
+    }
+
+    void setWriteThrough(boolean writeThrough) {
+        this.writeThrough = writeThrough;
+    }
+
+    void setStoreByValue(boolean storeByValue) {
+        this.storeByValue = storeByValue;
+    }
+
+    void setIsolationLevel(IsolationLevel isolationLevel) {
+        this.isolationLevel = isolationLevel;
+    }
+
+    void setTransactionMode(Mode transactionMode) {
+        this.transactionMode = transactionMode;
+    }
+
+    void setTimeToLive(Duration[] timeToLive) {
         this.timeToLive = timeToLive;
     }
 
@@ -91,7 +152,7 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
      */
     @Override
     public boolean isStatisticsEnabled() {
-        return statisticsEnabled.get();
+        return statisticsEnabled;
     }
 
     /**
@@ -99,7 +160,7 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
      */
     @Override
     public void setStatisticsEnabled(boolean enableStatistics) {
-        statisticsEnabled.set(enableStatistics);
+        this.statisticsEnabled = enableStatistics;
     }
 
     @Override
@@ -107,7 +168,10 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
         return timeToLive[type.ordinal()];
     }
 
-    void setExpiry(long expiryTime, TimeUnit timeUnit, ExpiryType type){
+    void setExpiry(long expiryTime, TimeUnit timeUnit, ExpiryType type) {
+        if (timeToLive == null) {
+            timeToLive = new CacheConfiguration.Duration[2];
+        }
         timeToLive[type.ordinal()] = new Duration(timeUnit, expiryTime);
     }
 
@@ -131,12 +195,20 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
 
     @Override
     public CacheLoader getCacheLoader() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.cacheLoader;
     }
 
     @Override
     public CacheWriter getCacheWriter() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return this.cacheWriter;
+    }
+
+    void setCacheLoader(CacheLoader cacheLoader) {
+        this.cacheLoader = cacheLoader;
+    }
+
+    void setCacheWriter(CacheWriter cacheWriter) {
+        this.cacheWriter = cacheWriter;
     }
 
     @Override
@@ -164,157 +236,9 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
         for (ExpiryType ttyType : ExpiryType.values()) {
             if (getExpiry(ttyType) != that.getExpiry(ttyType)) return false;
         }
-        if (storeByValue != isStoreByValue()) return false;
-        if (isolationLevel != that.getTransactionIsolationLevel()) return false;
-        if (transactionMode != that.getTransactionMode()) return false;
+        return storeByValue == isStoreByValue() &&
+               isolationLevel == that.getTransactionIsolationLevel() &&
+               transactionMode == that.getTransactionMode();
 
-        return true;
-    }
-
-    /**
-     * Builds the config
-     *
-     * @author Yannis Cosmadopoulos
-     */
-    public abstract static class Builder {
-        private static final boolean DEFAULT_READ_THROUGH = false;
-        private static final boolean DEFAULT_WRITE_THROUGH = false;
-        private static final boolean DEFAULT_STATISTICS_ENABLED = false;
-        private static final Duration DEFAULT_TIME_TO_LIVE = Duration.ETERNAL;
-        private static final boolean DEFAULT_STORE_BY_VALUE = true;
-        private static final IsolationLevel DEFAULT_TRANSACTION_ISOLATION_LEVEL = IsolationLevel.NONE;
-        private static final Mode DEFAULT_TRANSACTION_MODE = Mode.NONE;
-
-        /**
-         * read through
-         */
-        protected boolean readThrough = DEFAULT_READ_THROUGH;
-        /**
-         * write through
-         */
-        protected boolean writeThrough = DEFAULT_WRITE_THROUGH;
-        /**
-         * statistics enabled
-         */
-        protected boolean statisticsEnabled = DEFAULT_STATISTICS_ENABLED;
-        /**
-         * duration
-         */
-        protected final Duration[] timeToLive;
-
-        /**
-         * store by value
-         */
-        protected boolean storeByValue = DEFAULT_STORE_BY_VALUE;
-
-        /**
-         * isolation level
-         */
-        protected IsolationLevel isolationLevel = DEFAULT_TRANSACTION_ISOLATION_LEVEL;
-
-        /**
-         * transaction mode
-         */
-        protected Mode transactionMode = DEFAULT_TRANSACTION_MODE;
-
-        /**
-         * Constructor
-         */
-        public Builder() {
-            timeToLive = new Duration[ExpiryType.values().length];
-            for (int i = 0; i < timeToLive.length; i++) {
-                timeToLive[i] = DEFAULT_TIME_TO_LIVE;
-            }
-        }
-
-        /**
-         * the build method
-         *
-         * @return a configuration
-         */
-        public abstract CacheConfiguration build();
-
-        /**
-         * Set whether read through is active
-         *
-         * @param readThrough whether read through is active
-         * @return this Builder instance
-         */
-        public Builder setReadThrough(boolean readThrough) {
-            this.readThrough = readThrough;
-            return this;
-        }
-
-        /**
-         * Set whether write through is active
-         *
-         * @param writeThrough whether write through is active
-         * @return this Builder instance
-         */
-        public Builder setWriteThrough(boolean writeThrough) {
-            this.writeThrough = writeThrough;
-            return this;
-        }
-
-        /**
-         * Set whether statistics are enabled
-         *
-         * @param statisticsEnabled statistics are enabled
-         * @return this Builder instance
-         */
-        public Builder setStatisticsEnabled(boolean statisticsEnabled) {
-            this.statisticsEnabled = statisticsEnabled;
-            return this;
-        }
-
-        /**
-         * Set expiry
-         *
-         * @param type     ttl type
-         * @param duration time to live
-         * @return this Builder instance
-         */
-        public Builder setExpiry(ExpiryType type, Duration duration) {
-            if (type == null) {
-                throw new NullPointerException();
-            }
-            if (duration == null) {
-                throw new NullPointerException();
-            }
-            this.timeToLive[type.ordinal()] =
-                    duration.getDurationAmount() == 0 ? Duration.ETERNAL : duration;
-            return this;
-        }
-
-
-        /**
-         * Set whether store by value is active
-         *
-         * @param storeByValue whether store by value is active
-         * @return this Builder instance
-         */
-        public Builder setStoreByValue(boolean storeByValue) {
-            if (!storeByValue && !Caching.isSupported(OptionalFeature.STORE_BY_REFERENCE)) {
-                throw new InvalidConfigurationException("storeByValue");
-            }
-            this.storeByValue = storeByValue;
-            return this;
-        }
-
-        /**
-         * Set whether transactions are enabled
-         *
-         * @param isolationLevel isolation level
-         * @param mode           the transactionMode
-         * @return this Builder instance
-         */
-        public Builder setTransactionEnabled(IsolationLevel isolationLevel, Mode mode) {
-            if (!Caching.isSupported(OptionalFeature.TRANSACTIONS)) {
-                throw new InvalidConfigurationException("transactionsEnabled");
-            }
-            this.isolationLevel = isolationLevel;
-            this.transactionMode = mode;
-            return this;
-        }
     }
 }

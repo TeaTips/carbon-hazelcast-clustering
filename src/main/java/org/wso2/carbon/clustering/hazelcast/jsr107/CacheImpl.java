@@ -555,4 +555,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public void evict(K key) {
 
     }
+
+    public void setCacheConfiguration(CacheConfigurationImpl cacheConfiguration) {
+        this.cacheConfiguration = cacheConfiguration;
+    }
 }

@@ -22,6 +22,9 @@ import javax.cache.CacheBuilder;
 import javax.cache.CacheConfiguration;
 import javax.cache.CacheLoader;
 import javax.cache.CacheWriter;
+import javax.cache.Caching;
+import javax.cache.InvalidConfigurationException;
+import javax.cache.OptionalFeature;
 import javax.cache.event.CacheEntryListener;
 import javax.cache.transaction.IsolationLevel;
 import javax.cache.transaction.Mode;
@@ -29,54 +32,92 @@ import javax.cache.transaction.Mode;
 /**
  * TODO: class description
  */
-public class CacheBuilderImpl<K,V> implements CacheBuilder<K,V>{
+public class CacheBuilderImpl<K, V> implements CacheBuilder<K, V> {
+
+    private CacheConfigurationImpl cacheConfiguration = new CacheConfigurationImpl();
+    private String cacheName;
+    private HazelcastCacheManager cacheManager;
+    private CacheImpl<K, V> cache;
+
+    public CacheBuilderImpl(String cacheName, HazelcastCacheManager cacheManager) {
+        this.cacheName = cacheName;
+        this.cacheManager = cacheManager;
+    }
+
     @Override
     public Cache<K, V> build() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        cache = new CacheImpl<K, V>(cacheName, cacheManager);
+        //TODO: set the tenant info
+        cache.setCacheConfiguration(cacheConfiguration);
+        cacheManager.addCache(cache);
+        return cache;
     }
 
     @Override
     public CacheBuilder<K, V> setCacheLoader(CacheLoader<K, ? extends V> cacheLoader) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        cacheConfiguration.setCacheLoader(cacheLoader);
+        return this;
     }
 
     @Override
     public CacheBuilder<K, V> setCacheWriter(CacheWriter<? super K, ? super V> cacheWriter) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        cacheConfiguration.setCacheWriter(cacheWriter);
+        return this;
     }
 
     @Override
     public CacheBuilder<K, V> registerCacheEntryListener(CacheEntryListener<K, V> cacheEntryListener) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        cache.registerCacheEntryListener(cacheEntryListener);
+        return this;
     }
 
     @Override
     public CacheBuilder<K, V> setStoreByValue(boolean storeByValue) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (!storeByValue && !Caching.isSupported(OptionalFeature.STORE_BY_REFERENCE)) {
+            throw new InvalidConfigurationException("storeByValue");
+        }
+        cacheConfiguration.setStoreByValue(storeByValue);
+        return this;
     }
 
     @Override
     public CacheBuilder<K, V> setTransactionEnabled(IsolationLevel isolationLevel, Mode mode) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (!Caching.isSupported(OptionalFeature.TRANSACTIONS)) {
+            throw new InvalidConfigurationException("transactionsEnabled");
+        }
+        cacheConfiguration.setTransactionMode(mode);
+        cacheConfiguration.setIsolationLevel(isolationLevel);
+        return this;
     }
 
     @Override
     public CacheBuilder<K, V> setStatisticsEnabled(boolean enableStatistics) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        cacheConfiguration.setStatisticsEnabled(enableStatistics);
+        return this;
     }
 
     @Override
     public CacheBuilder<K, V> setReadThrough(boolean readThrough) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        cacheConfiguration.setReadThrough(readThrough);
+        return this;
     }
 
     @Override
     public CacheBuilder<K, V> setWriteThrough(boolean writeThrough) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        cacheConfiguration.setWriteThrough(writeThrough);
+        return this;
     }
 
     @Override
-    public CacheBuilder<K, V> setExpiry(CacheConfiguration.ExpiryType type, CacheConfiguration.Duration duration) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public CacheBuilder<K, V> setExpiry(CacheConfiguration.ExpiryType type,
+                                        CacheConfiguration.Duration duration) {
+        if (type == null) {
+            throw new NullPointerException("ExpiryType cannot be null");
+        }
+        if (duration == null) {
+            throw new NullPointerException("Duration cannot be null");
+        }
+        cacheConfiguration.setExpiry(duration.getDurationAmount(), duration.getTimeUnit(), type);
+        return this;
     }
 }

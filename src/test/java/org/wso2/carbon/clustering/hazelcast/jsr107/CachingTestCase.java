@@ -102,9 +102,9 @@ public class CachingTestCase {
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
           description = "")
-    public void checkWithCustomCacheConfiguration(){
+    public void checkWithCustomCacheConfiguration() {
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
-        String cacheName = "sampleCache";
+        String cacheName = "cacheXXX";
         cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
                 setExpiry(CacheConfiguration.ExpiryType.MODIFIED, new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).
                 setStoreByValue(false).build();
@@ -114,8 +114,20 @@ public class CachingTestCase {
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          expectedExceptions = {javax.cache.CacheException.class},
+          dependsOnMethods = "checkWithCustomCacheConfiguration")
+    public void testCreateExistingCache() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+        String cacheName = "cacheXXX";
+        cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
+                setExpiry(CacheConfiguration.ExpiryType.MODIFIED,
+                          new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).
+                setStoreByValue(false).build();
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
           description = "")
-    public void testSerializableObject(){
+    public void testSerializableObject() {
 
         String name = "Afkham Azeez";
         String address = "301/2A, Dehiwela Road";
@@ -137,7 +149,7 @@ public class CachingTestCase {
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
           dependsOnMethods = "testSerializableObject",
           description = "")
-    public void testRemoveObjectFromCache(){
+    public void testRemoveObjectFromCache() {
         Long id = (long) 789;
         String cacheName = "sampleCache";
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
@@ -149,4 +161,6 @@ public class CachingTestCase {
         Assert.assertNull(cache.get(id));
 
     }
+
+    //TODO: tenant tests
 }
