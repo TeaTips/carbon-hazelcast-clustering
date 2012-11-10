@@ -22,7 +22,7 @@ import javax.cache.CacheManager;
 import javax.cache.Caching;
 
 public class CacheTester {
-    private Cache<String, Integer> cache;
+//    private Cache<String, Integer> cache;
 
     public CacheTester() {
         System.out.println("Cache testing....");
@@ -31,35 +31,14 @@ public class CacheTester {
         // CacheManager cacheManager = Caching.getCacheManager(); // same as Caching.getCacheManagerFactory().getCacheManager("__default__");
 
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
-        cache = cacheManager.getCache(cacheName);
+//        cache = cacheManager.getCache(cacheName);
     }
 
     /*public static void main(String[] args) {
         new CacheTest().testCache();
     }*/
 
-    public boolean testCache() {
-
-        /*cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).setExpiry(CacheConfiguration.ExpiryType.MODIFIED,
-                                                                                      new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).setStoreByValue(false).build();*/
-
-        put("key", 1);
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        System.out.println("value2 = " + get("key"));
-//        assertEquals(value1, value2);
-
-
-//        cache.remove("key");
-
-//        assertNull(cache.get("key"));
-        return false;
-    }
-
-    public void put(String key, int value){
+    public void put(String manager, String cacheName, String key, int value){
 
 //        Integer value1 = cache.get(key);
 //        System.out.println("value1 = " + value1);
@@ -68,10 +47,14 @@ public class CacheTester {
 //        } else {
 //            value1 ++;
 //        }
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager(manager);
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
         cache.put(key, value);
     }
 
-    public int get(String key){
+    public int get(String manager, String cacheName, String key){
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager(manager);
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
         Integer integer = cache.get(key);
         return integer == null ? 0 : integer;
     }

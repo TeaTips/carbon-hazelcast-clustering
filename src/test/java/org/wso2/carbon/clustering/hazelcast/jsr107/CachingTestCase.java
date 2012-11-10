@@ -51,6 +51,7 @@ public class CachingTestCase {
     }
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          dependsOnMethods = "checkNonExistentItem",
           description = "")
     public void checkPut() throws Exception {
         Integer sampleValue = 1245;
@@ -110,5 +111,42 @@ public class CachingTestCase {
         int value = 9876;
         cache.put(key, value);
         Assert.assertEquals(cache.get(key).intValue(), value);
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testSerializableObject(){
+
+        String name = "Afkham Azeez";
+        String address = "301/2A, Dehiwela Road";
+        Long id = (long) 789;
+        SerializableTestObject obj = new SerializableTestObject(name, address, id);
+
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+        String cacheName = "sampleCache";
+        Cache<Long, SerializableTestObject> cache = cacheManager.getCache(cacheName);
+        cache.put(id, obj);
+
+        Cache<Long, SerializableTestObject> cache2 = cacheManager.getCache(cacheName);
+
+        Assert.assertEquals(cache2.get(id).getId(), id);
+        Assert.assertEquals(cache2.get(id).getAddress(), address);
+        Assert.assertEquals(cache2.get(id).getName(), name);
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          dependsOnMethods = "testSerializableObject",
+          description = "")
+    public void testRemoveObjectFromCache(){
+        Long id = (long) 789;
+        String cacheName = "sampleCache";
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+        Cache<Long, SerializableTestObject> cache = cacheManager.getCache(cacheName);
+        Assert.assertNotNull(cache.get(id));
+
+        Cache<Long, SerializableTestObject> cache2 = cacheManager.getCache(cacheName);
+        cache2.remove(id);
+        Assert.assertNull(cache.get(id));
+
     }
 }
