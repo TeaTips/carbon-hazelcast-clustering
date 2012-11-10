@@ -59,5 +59,13 @@ public class CacheTester {
         return integer == null ? 0 : integer;
     }
 
+    public void print(String manager, String cacheName){
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager(manager);
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
+        for (Cache.Entry<String, Integer> entry : cache) {
+            System.out.println(entry.getKey() + "=" + entry.getValue());
+        }
+    }
+
 
 }

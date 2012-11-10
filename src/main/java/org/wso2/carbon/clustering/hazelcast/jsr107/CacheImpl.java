@@ -89,7 +89,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
                 HazelcastInstanceManager.getInstance().getHazelcastInstance();
         if (hazelcastInstance != null) {
             log.info("Using Hazelcast based distributed cache");
-            distributedCache = hazelcastInstance.getMap(cacheName);
+            distributedCache = hazelcastInstance.getMap("$cache." + cacheManager.getName() + "#" + cacheName);  //TODO: IMPORTANT: Get the tenant ID in
         } else {
             log.info("Using local cache");
             isLocalCache = true;

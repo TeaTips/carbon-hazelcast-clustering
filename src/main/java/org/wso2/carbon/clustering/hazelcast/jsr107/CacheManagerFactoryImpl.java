@@ -23,6 +23,7 @@ import javax.cache.CachingShutdownException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -34,10 +35,10 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
 
     static{
         ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10);
-        cacheExpiryScheduler.scheduleWithFixedDelay(new CacheExpiryTask(), 0, 30, TimeUnit.SECONDS);
+        cacheExpiryScheduler.scheduleWithFixedDelay(new CacheCleanupTask(), 0, 30, TimeUnit.SECONDS);
     }
 
-    private Map<String, CacheManager>  cacheManagers = new HashMap<String, CacheManager>();
+    private Map<String, CacheManager>  cacheManagers = new ConcurrentHashMap<String, CacheManager>();
 
     public Map<String, CacheManager> getCacheManagers(){
         return Collections.unmodifiableMap(cacheManagers);

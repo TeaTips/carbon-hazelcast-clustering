@@ -33,12 +33,12 @@ import java.util.Map;
  *
  * TODO: Also handle cache eviction - remove items from cache when the cache is full
  */
-public class CacheExpiryTask implements Runnable {
-    private static final Log log = LogFactory.getLog(CacheExpiryTask.class);
+public class CacheCleanupTask implements Runnable {
+    private static final Log log = LogFactory.getLog(CacheCleanupTask.class);
 
     @Override
     @SuppressWarnings("unchecked")
-    public void run() {
+    public synchronized void run() {
         log.info("Cache expiry scheduler running...");
 
         // Get all the caches
