@@ -163,7 +163,26 @@ public class CachingTestCase {
         Cache<Long, SerializableTestObject> cache2 = cacheManager.getCache(cacheName);
         cache2.remove(id);
         assertNull(cache.get(id));
+    }
 
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testCacheIterator() {
+        Long id = (long) 789;
+        String cacheName = "sampleCacheABC";
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+        Cache<Long, Long> cache = cacheManager.getCache(cacheName);
+        cache.put((long) 123, id);
+        cache.put((long) 456, id);
+        cache.put((long) 789, id);
+        cache.put((long) 12, id);
+
+        int entries = 0;
+        for (Cache.Entry<Long, Long> entry : cache) {
+            assertNotNull(entry);
+            entries ++;
+        }
+        assertEquals(entries, 4);
     }
 
     //TODO: tenant tests

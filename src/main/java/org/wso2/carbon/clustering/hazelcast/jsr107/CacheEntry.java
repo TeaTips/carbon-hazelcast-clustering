@@ -17,12 +17,13 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
+import javax.cache.Cache;
 import java.io.Serializable;
 
 /**
  * TODO: class description
  */
-public class CacheEntry<K, V> implements Serializable {
+public class CacheEntry<K, V> implements Cache.Entry<K, V>, Serializable {
 
     private static final long serialVersionUID = 1996179870860085427L;
 

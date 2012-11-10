@@ -66,8 +66,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private String cacheName;
     private CacheManager cacheManager;
     private boolean isLocalCache;
-    private IMap<K, CacheEntry> distributedCache;
-    private Map<K, CacheEntry> localCache;
+    private IMap<K, CacheEntry<K, V>> distributedCache;
+    private Map<K, CacheEntry<K, V>> localCache;
     private CacheConfiguration<K, V> cacheConfiguration;
 
     private List<CacheEntryListener> cacheEntryListeners = new ArrayList<CacheEntryListener>();
@@ -93,7 +93,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         } else {
             log.info("Using local cache");
             isLocalCache = true;
-            localCache = new ConcurrentHashMap<K, CacheEntry>();
+            localCache = new ConcurrentHashMap<K, CacheEntry<K, V>>();
         }
         cacheStatistics = new CacheStatisticsImpl();
         this.cacheMXBean = new CacheMXBeanImpl(this);
@@ -138,7 +138,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<K, CacheEntry> getMap() {
+    private Map<K, CacheEntry<K, V>> getMap() {
         return isLocalCache ? localCache : distributedCache;
     }
 
@@ -148,7 +148,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.get(key);
         V value = null;
         if (entry != null) {
@@ -164,7 +164,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> source = getMap();
+        Map<K, CacheEntry<K, V>> source = getMap();
         Map<K, V> destination = new HashMap<K, V>(keys.size());
         for (K key : keys) {
             destination.put(key, (V) source.get(key).getValue());
@@ -172,7 +172,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         return destination;
     }
 
-    public Collection<CacheEntry> getAll() {
+    public Collection<CacheEntry<K, V>> getAll() {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -216,7 +216,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.get(key);
         V oldValue = entry != null ? (V) entry.getValue() : null;
         if (oldValue == null) {
@@ -301,7 +301,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> destination = getMap();
+        Map<K, CacheEntry<K, V>> destination = getMap();
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
             K key = entry.getKey();
             destination.put(key, new CacheEntry(key, entry.getValue()));
@@ -314,7 +314,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         if (!map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
             notifyCacheEntryCreated(key, value);
@@ -341,7 +341,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
             map.remove(key);
             notifyCacheEntryRemoved(key, oldValue);
@@ -369,7 +369,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
             map.put(key, new CacheEntry(key, newValue));
             notifyCacheEntryUpdated(key, newValue);
@@ -383,7 +383,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
             notifyCacheEntryUpdated(key, value);
@@ -397,7 +397,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
             notifyCacheEntryUpdated(key, value);
@@ -411,7 +411,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Map<K, CacheEntry> map = getMap();
+        Map<K, CacheEntry<K, V>> map = getMap();
         for (K key : keys) {
             CacheEntry entry = map.remove(key);
             notifyCacheEntryRemoved(key, (V) entry.getValue());
@@ -423,7 +423,12 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        getMap().clear();
+
+        Map<K, CacheEntry<K, V>> map = getMap();
+        for (Map.Entry<K, CacheEntry<K, V>> entry : map.entrySet()) {
+            notifyCacheEntryRemoved(entry.getKey(), (V) entry.getValue().getValue());
+        }
+        map.clear();
         //TODO: Notify value removed
     }
 
@@ -499,7 +504,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Iterator<Entry<K, V>> iterator() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new CacheEntryIterator<K, V>(getMap().values().iterator());
     }
 
     @Override
@@ -553,10 +558,46 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public void evict(K key) {
-
+        if (status != Status.STARTED) {
+            throw new IllegalStateException();
+        }
+        Map<K, CacheEntry<K, V>> map = getMap();
+        map.remove(key);
     }
 
     public void setCacheConfiguration(CacheConfigurationImpl cacheConfiguration) {
         this.cacheConfiguration = cacheConfiguration;
+    }
+
+    private static final class CacheEntryIterator<K, V> implements Iterator<Entry<K, V>> {
+        private Iterator<CacheEntry<K, V>> iterator;
+
+        public CacheEntryIterator(Iterator<CacheEntry<K, V>> iterator) {
+            this.iterator = iterator;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Entry<K, V> next() {
+            return iterator.next();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void remove() {
+            iterator.remove();
+        }
     }
 }
