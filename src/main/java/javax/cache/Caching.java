@@ -7,6 +7,7 @@
 
 package javax.cache;
 
+import org.wso2.carbon.clustering.hazelcast.jsr107.AnnotationProviderImpl;
 import org.wso2.carbon.clustering.hazelcast.jsr107.CachingProviderImpl;
 
 import javax.cache.spi.AnnotationProvider;
@@ -238,10 +239,11 @@ public final class Caching {
                 @Override
                 public List<AnnotationProvider> run() {
                     List<AnnotationProvider> result = new ArrayList<AnnotationProvider>();
-                    ServiceLoader<AnnotationProvider> serviceLoader = ServiceLoader.load(AnnotationProvider.class);
+                    /*ServiceLoader<AnnotationProvider> serviceLoader = ServiceLoader.load(AnnotationProvider.class);
                     for (AnnotationProvider provider : serviceLoader) {
                         result.add(provider);
-                    }
+                    }*/
+                    result.add(new AnnotationProviderImpl());
                     return result;
                 }
             });
