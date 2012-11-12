@@ -321,8 +321,17 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         Map<K, CacheEntry<K, V>> destination = getMap();
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
             K key = entry.getKey();
-            destination.put(key, new CacheEntry(key, entry.getValue()));
-            //TODO: Notify CacheListeners
+            boolean entryExists = false;
+            if (destination.containsKey(key)) {
+                entryExists = true;
+            }
+            V value = entry.getValue();
+            destination.put(key, new CacheEntry(key, value));
+            if (entryExists) {
+                notifyCacheEntryUpdated(key, value);
+            } else {
+                notifyCacheEntryCreated(key, value);
+            }
         }
     }
 
@@ -498,7 +507,12 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public <T> T unwrap(Class<T> cls) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (cls.isAssignableFrom(this.getClass())) {
+            return cls.cast(this);
+        }
+
+        throw new IllegalArgumentException("Unwrapping to " + cls +
+                                           " is not a supported by this implementation");
     }
 
     @Override
