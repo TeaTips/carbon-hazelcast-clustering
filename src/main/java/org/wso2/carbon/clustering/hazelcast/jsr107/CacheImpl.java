@@ -25,6 +25,7 @@ import org.wso2.carbon.clustering.hazelcast.HazelcastInstanceManager;
 
 import javax.cache.Cache;
 import javax.cache.CacheConfiguration;
+import javax.cache.CacheLoader;
 import javax.cache.CacheManager;
 import javax.cache.CacheStatistics;
 import javax.cache.Status;
@@ -51,8 +52,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,6 +68,8 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("unchecked")
 public class CacheImpl<K, V> implements Cache<K, V> {
     private static final Log log = LogFactory.getLog(CacheImpl.class);
+    private static final int CACHE_LOADER_THREADS = 2;
+
     private String cacheName;
     private CacheManager cacheManager;
     private boolean isLocalCache;
@@ -75,6 +82,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private CacheStatisticsImpl cacheStatistics;
     private ObjectName cacheMXBeanObjName;
     private CacheMXBeanImpl cacheMXBean;
+    private final ExecutorService cacheLoadExecService = Executors.newFixedThreadPool(CACHE_LOADER_THREADS);
 
     public CacheImpl(String tenantDomain, String cacheName, CacheManager cacheManager) {
         this("$cache." + tenantDomain + "#" + cacheName, cacheManager);
@@ -146,9 +154,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     @SuppressWarnings("unchecked")
     public V get(K key) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.get(key);
         V value = null;
@@ -162,9 +168,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Map<K, V> getAll(Set<? extends K> keys) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> source = getMap();
         Map<K, V> destination = new HashMap<K, V>(keys.size());
         for (K key : keys) {
@@ -174,49 +178,65 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public Collection<CacheEntry<K, V>> getAll() {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         return Collections.unmodifiableCollection(getMap().values());
     }
 
     @Override
     public boolean containsKey(K key) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         return getMap().containsKey(key);
     }
 
     @Override
     public Future<V> load(K key) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
+        checkStatusStarted();
+        CacheLoader<K, ? extends V> cacheLoader = cacheConfiguration.getCacheLoader();
+        if (cacheLoader == null) {
+            return null;
         }
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (containsKey(key)) {
+            return null;
+        }
+        FutureTask<V> task = new FutureTask<V>(new CacheLoaderLoadCallable<K, V>(this, cacheLoader, key));
+        cacheLoadExecService.submit(task);
+        return task;
+    }
+
+    private void checkStatusStarted() {
+        if (!status.equals(Status.STARTED)) {
+            throw new IllegalStateException("The cache status is not STARTED");
+        }
     }
 
     @Override
-    public Future<Map<K, ? extends V>> loadAll(Set<? extends K> keys) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
+    public Future<Map<K, ? extends V>> loadAll(final Set<? extends K> keys) {
+        checkStatusStarted();
+        if (keys == null) {
+            throw new NullPointerException("keys");
         }
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        CacheLoader<K, ? extends V> cacheLoader = cacheConfiguration.getCacheLoader();
+        if (cacheLoader == null) {
+            return null;
+        }
+        if (keys.contains(null)) {
+            throw new NullPointerException("key");
+        }
+        Callable<Map<K, ? extends V>> callable = new CacheLoaderLoadAllCallable<K, V>(this, cacheLoader, keys);
+        FutureTask<Map<K, ? extends V>> task = new FutureTask<Map<K, ? extends V>>(callable);
+        cacheLoadExecService.submit(task);
+        return task;
     }
 
     @Override
     public CacheStatistics getStatistics() {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         return cacheStatistics;
     }
 
     @Override
     public void put(K key, V value) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.get(key);
         V oldValue = entry != null ? (V) entry.getValue() : null;
@@ -284,9 +304,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndPut(K key, V value) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         V oldValue = (V) getMap().get(key).getValue();
         put(key, value);
         if (oldValue == null) {
@@ -299,9 +317,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> destination = getMap();
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
             K key = entry.getKey();
@@ -312,9 +328,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean putIfAbsent(K key, V value) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (!map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
@@ -326,9 +340,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(Object key) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         CacheEntry entry = getMap().remove((K) key);
         boolean removed = entry != null;
         if (removed) {
@@ -339,9 +351,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(K key, V oldValue) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
             map.remove(key);
@@ -353,9 +363,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndRemove(K key) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         CacheEntry entry = getMap().remove(key);
         if (entry != null) {
             V value = (V) entry.getValue();
@@ -367,9 +375,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
             map.put(key, new CacheEntry(key, newValue));
@@ -381,9 +387,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V value) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
@@ -395,9 +399,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndReplace(K key, V value) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
@@ -409,9 +411,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll(Set<? extends K> keys) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         for (K key : keys) {
             CacheEntry entry = map.remove(key);
@@ -421,9 +421,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll() {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
 
         Map<K, CacheEntry<K, V>> map = getMap();
         for (Map.Entry<K, CacheEntry<K, V>> entry : map.entrySet()) {
@@ -523,9 +521,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void stop() {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         getMap().clear();
 
         if (!isLocalCache) {
@@ -559,9 +555,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public void evict(K key) {
-        if (status != Status.STARTED) {
-            throw new IllegalStateException();
-        }
+        checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         map.remove(key);
     }
@@ -599,6 +593,64 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         @Override
         public void remove() {
             iterator.remove();
+        }
+    }
+
+    /**
+     * Callable used for cache loader.
+     *
+     * @param <K> the type of the key
+     * @param <V> the type of the value
+     */
+    private static class CacheLoaderLoadCallable<K, V> implements Callable<V> {
+        private final CacheImpl<K, V> cache;
+        private final CacheLoader<K, ? extends V> cacheLoader;
+        private final K key;
+
+        CacheLoaderLoadCallable(CacheImpl<K, V> cache, CacheLoader<K, ? extends V> cacheLoader, K key) {
+            this.cache = cache;
+            this.cacheLoader = cacheLoader;
+            this.key = key;
+        }
+
+        @Override
+        public V call() throws Exception {
+            Entry<K, ? extends V> entry = cacheLoader.load(key);
+            cache.put(entry.getKey(), entry.getValue());
+            return entry.getValue();
+        }
+    }
+
+    /**
+     * Callable used for cache loader.
+     *
+     * @param <K> the type of the key
+     * @param <V> the type of the value
+     */
+    private static class CacheLoaderLoadAllCallable<K, V> implements Callable<Map<K, ? extends V>> {
+        private final CacheImpl<K, V> cache;
+        private final CacheLoader<K, ? extends V> cacheLoader;
+        private final Collection<? extends K> keys;
+
+        CacheLoaderLoadAllCallable(CacheImpl<K, V> cache,
+                                   CacheLoader<K, ? extends V> cacheLoader,
+                                   Collection<? extends K> keys) {
+            this.cache = cache;
+            this.cacheLoader = cacheLoader;
+            this.keys = keys;
+        }
+
+        @Override
+        public Map<K, ? extends V> call() throws Exception {
+            ArrayList<K> keysNotInStore = new ArrayList<K>();
+            for (K key : keys) {
+                if (!cache.containsKey(key)) {
+                    keysNotInStore.add(key);
+                }
+            }
+            Map<K, ? extends V> value = cacheLoader.loadAll(keysNotInStore);
+            cache.putAll(value);
+            return value;
         }
     }
 }
