@@ -21,8 +21,13 @@ import org.testng.annotations.Test;
 
 import javax.cache.Cache;
 import javax.cache.CacheConfiguration;
+import javax.cache.CacheLoader;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.assertEquals;
@@ -139,7 +144,7 @@ public class CachingTestCase {
         SerializableTestObject obj = new SerializableTestObject(name, address, id);
 
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
-        String cacheName = "sampleCache";
+        String cacheName = "sampleCacheX";
         Cache<Long, SerializableTestObject> cache = cacheManager.getCache(cacheName);
         cache.put(id, obj);
 
@@ -155,7 +160,7 @@ public class CachingTestCase {
           description = "")
     public void testRemoveObjectFromCache() {
         Long id = (long) 789;
-        String cacheName = "sampleCache";
+        String cacheName = "sampleCacheX";
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
         Cache<Long, SerializableTestObject> cache = cacheManager.getCache(cacheName);
         assertNotNull(cache.get(id));
@@ -180,10 +185,65 @@ public class CachingTestCase {
         int entries = 0;
         for (Cache.Entry<Long, Long> entry : cache) {
             assertNotNull(entry);
-            entries ++;
+            entries++;
         }
         assertEquals(entries, 4);
     }
 
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testCacheLoaderLoadAll() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+        String cacheName = "cacheYYY";
+        Cache<String, String> cache =
+                cacheManager.<String, String>createCacheBuilder(cacheName).
+                        setCacheLoader(new TestCacheLoader<String, String>()).build();
+        HashSet<String> hashSet = new HashSet<String>();
+
+
+        for (int i = 1; i < 6; i++) {
+            hashSet.add("key" + i);
+        }
+        Future<Map<String, ? extends String>> future = cache.loadAll(hashSet);
+
+        for (int i = 1; i < 6; i++) {
+//            assertNotNull(cache.get("key" + i));
+        }
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testCacheLoaderLoad() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+        String cacheName = "cacheZZZ";
+        Cache<String, String> cache =
+                cacheManager.<String, String>createCacheBuilder(cacheName).
+                        setCacheLoader(new TestCacheLoader<String, String>()).build();
+        Future<String> future = cache.load("key1");
+        while (!future.isDone()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ignored) {
+            }
+        }
+        assertNotNull(cache.get("key1"));
+    }
+
+    private static class TestCacheLoader<K, V> implements CacheLoader<K, V> {
+
+        @Override
+        public Cache.Entry<K, V> load(K key) {
+            return new CacheEntry<K, V>(key, (V) ("key" + System.currentTimeMillis()));
+        }
+
+        @Override
+        public Map<K, V> loadAll(Iterable<? extends K> keys) {
+            Map<K, V> map = new HashMap<K, V>();
+            for (K key : keys) {
+                map.put(key, (V) ("key" + System.currentTimeMillis()));
+            }
+            return map;
+        }
+    }
     //TODO: tenant tests
 }

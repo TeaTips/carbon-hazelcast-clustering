@@ -55,6 +55,12 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName) {
+        //TODO: Check/set tenant info
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        */
         if (caches.get(cacheName) != null) {
             throw new CacheException("Cache " + cacheName + " already exists");
         }
@@ -75,6 +81,12 @@ public class HazelcastCacheManager implements CacheManager {
     @Override
     @SuppressWarnings("unchecked")
     public <K, V> Cache<K, V> getCache(String cacheName) {
+        //TODO: Check/set tenant info
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        */
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -88,6 +100,12 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public Iterable<Cache<?, ?>> getCaches() {
+        //TODO: Check/set tenant info
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        */
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -100,6 +118,12 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public boolean removeCache(String cacheName) {
+        //TODO: Check/set tenant info
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        */
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -127,6 +151,12 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public void shutdown() {
+        //TODO: Check/set tenant info
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        */
         for (Cache<?, ?> cache : caches.values()) {
             try {
                 cache.stop();
@@ -143,10 +173,22 @@ public class HazelcastCacheManager implements CacheManager {
     }
 
     boolean isEmpty() {
+        //TODO: Check/set tenant info
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        */
         return caches.isEmpty();
     }
 
     void addCache(CacheImpl cache) {
+        //TODO: Check/set tenant info
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        */
         caches.put(cache.getName(), cache);
     }
 }

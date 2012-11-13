@@ -21,7 +21,10 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.clustering.hazelcast.HazelcastInstanceManager;
+import org.wso2.carbon.context.CarbonContext;
+import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.cache.Cache;
 import javax.cache.CacheConfiguration;
@@ -84,6 +87,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private CacheMXBeanImpl cacheMXBean;
     private final ExecutorService cacheLoadExecService = Executors.newFixedThreadPool(CACHE_LOADER_THREADS);
 
+    private String ownerTenantDomain;
+    private int ownerTenantId;
+
     public CacheImpl(String tenantDomain, String cacheName, CacheManager cacheManager) {
         this("$cache." + tenantDomain + "#" + cacheName, cacheManager);
         this.cacheName = cacheName;
@@ -91,13 +97,29 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public CacheImpl(String cacheName, CacheManager cacheManager) {
+        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if(carbonContext == null){
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        ownerTenantDomain = carbonContext.getTenantDomain();
+        if(ownerTenantDomain == null){
+            throw new IllegalStateException("Tenant domain cannot be " + ownerTenantDomain);
+        }
+        ownerTenantId = carbonContext.getTenantId();
+        if(ownerTenantId == MultitenantConstants.INVALID_TENANT_ID){
+            throw new IllegalStateException("Tenant ID cannot be " + ownerTenantId);
+        }*/
+
+        //TODO: On each cache call, try to see whether the caller & the owner tenants of the cache are the same
+
         this.cacheName = cacheName;
         this.cacheManager = cacheManager;
         HazelcastInstance hazelcastInstance =
                 HazelcastInstanceManager.getInstance().getHazelcastInstance();
         if (hazelcastInstance != null) {
             log.info("Using Hazelcast based distributed cache");
-            distributedCache = hazelcastInstance.getMap("$cache." + cacheManager.getName() + "#" + cacheName);  //TODO: IMPORTANT: Get the tenant ID in
+            distributedCache = hazelcastInstance.getMap("$cache.$domain[" + ownerTenantDomain + "]" +
+                                                        cacheManager.getName() + "#" + cacheName);
         } else {
             log.info("Using local cache");
             isLocalCache = true;
