@@ -96,7 +96,7 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
         this.statisticsEnabled = statisticsEnabled;
         this.isolationLevel = isolationLevel;
         this.transactionMode = transactionMode;
-        this.timeToLive = timeToLive;
+        this.timeToLive = Arrays.copyOf(timeToLive, timeToLive.length);
     }
 
     void setReadThrough(boolean readThrough) {

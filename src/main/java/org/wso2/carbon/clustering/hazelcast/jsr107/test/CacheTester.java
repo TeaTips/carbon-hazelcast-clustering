@@ -30,7 +30,6 @@ public class CacheTester {
         String cacheName = "sampleCache";
         // CacheManager cacheManager = Caching.getCacheManager(); // same as Caching.getCacheManagerFactory().getCacheManager("__default__");
 
-        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
 //        cache = cacheManager.getCache(cacheName);
     }
 
