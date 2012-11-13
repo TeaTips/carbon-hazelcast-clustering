@@ -18,12 +18,14 @@
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import org.testng.annotations.Test;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.cache.Cache;
 import javax.cache.CacheConfiguration;
 import javax.cache.CacheLoader;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,10 +46,14 @@ public class CachingTestCase {
     private String key = "testKey";
 
     public CachingTestCase() {
+        System.setProperty("carbon.home", new File(".").getAbsolutePath());
         System.out.println("Cache testing....");
 
         String cacheName = "sampleCache";
         // CacheManager cacheManager = Caching.getCacheManager(); // same as Caching.getCacheManagerFactory().getCacheManager("__default__");
+
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("foo.com");
+        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
 
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
         cache = cacheManager.getCache(cacheName);
@@ -220,7 +226,7 @@ public class CachingTestCase {
           description = "")
     public void testCacheLoaderLoad() {
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
-        String cacheName = "cacheZZZ";
+        String cacheName = "testCacheLoaderLoad-ZZZ";
         Cache<String, String> cache =
                 cacheManager.<String, String>createCacheBuilder(cacheName).
                         setCacheLoader(new TestCacheLoader<String, String>()).build();
@@ -234,8 +240,42 @@ public class CachingTestCase {
         assertNotNull(cache.get("key1"));
     }
 
-    //TODO: tenant tests
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          expectedExceptions = {SecurityException.class},
+          description = "")
+    public void testIllegalAccess() {
+        Integer sampleValue = 1245;
+        String key1 = "testIllegalAccess-123";
+        cache.put(key1, sampleValue);
 
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("bar.com");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(2);
+
+            cache.get(key1);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testLegalAccess() {
+        Integer sampleValue = 1245;
+        String key1 = "testLegalAccess-123";
+        cache.put(key1, sampleValue);
+
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("foo.com");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+
+            cache.get(key1);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
 
     private static class TestCacheLoader<K, V> implements CacheLoader<K, V> {
 

@@ -21,9 +21,9 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.CarbonConstants;
 import org.wso2.carbon.clustering.hazelcast.HazelcastInstanceManager;
 import org.wso2.carbon.context.CarbonContext;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.cache.Cache;
@@ -90,6 +90,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private String ownerTenantDomain;
     private int ownerTenantId;
 
+    //TODO: Remove this constructor
     public CacheImpl(String tenantDomain, String cacheName, CacheManager cacheManager) {
         this("$cache." + tenantDomain + "#" + cacheName, cacheManager);
         this.cacheName = cacheName;
@@ -97,18 +98,18 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public CacheImpl(String cacheName, CacheManager cacheManager) {
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
+        CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if (carbonContext == null) {
             throw new IllegalStateException("CarbonContext cannot be null");
         }
         ownerTenantDomain = carbonContext.getTenantDomain();
-        if(ownerTenantDomain == null){
+        if (ownerTenantDomain == null) {
             throw new IllegalStateException("Tenant domain cannot be " + ownerTenantDomain);
         }
         ownerTenantId = carbonContext.getTenantId();
-        if(ownerTenantId == MultitenantConstants.INVALID_TENANT_ID){
+        if (ownerTenantId == MultitenantConstants.INVALID_TENANT_ID) {
             throw new IllegalStateException("Tenant ID cannot be " + ownerTenantId);
-        }*/
+        }
 
         //TODO: On each cache call, try to see whether the caller & the owner tenants of the cache are the same
 
@@ -176,6 +177,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     @SuppressWarnings("unchecked")
     public V get(K key) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.get(key);
@@ -190,6 +192,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Map<K, V> getAll(Set<? extends K> keys) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> source = getMap();
         Map<K, V> destination = new HashMap<K, V>(keys.size());
@@ -200,18 +203,21 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public Collection<CacheEntry<K, V>> getAll() {
+        checkAccess();
         checkStatusStarted();
         return Collections.unmodifiableCollection(getMap().values());
     }
 
     @Override
     public boolean containsKey(K key) {
+        checkAccess();
         checkStatusStarted();
         return getMap().containsKey(key);
     }
 
     @Override
     public Future<V> load(K key) {
+        checkAccess();
         checkStatusStarted();
         CacheLoader<K, ? extends V> cacheLoader = cacheConfiguration.getCacheLoader();
         if (cacheLoader == null) {
@@ -220,7 +226,10 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (containsKey(key)) {
             return null;
         }
-        FutureTask<V> task = new FutureTask<V>(new CacheLoaderLoadCallable<K, V>(this, cacheLoader, key));
+        CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        FutureTask<V> task = new FutureTask<V>(new CacheLoaderLoadCallable<K, V>(this, cacheLoader, key,
+                                                                                 carbonContext.getTenantDomain(),
+                                                                                 carbonContext.getTenantId()));
         cacheLoadExecService.submit(task);
         return task;
     }
@@ -233,6 +242,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Future<Map<K, ? extends V>> loadAll(final Set<? extends K> keys) {
+        checkAccess();
         checkStatusStarted();
         if (keys == null) {
             throw new NullPointerException("keys");
@@ -244,7 +254,11 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (keys.contains(null)) {
             throw new NullPointerException("key");
         }
-        Callable<Map<K, ? extends V>> callable = new CacheLoaderLoadAllCallable<K, V>(this, cacheLoader, keys);
+        CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        Callable<Map<K, ? extends V>> callable =
+                new CacheLoaderLoadAllCallable<K, V>(this, cacheLoader, keys,
+                                                     carbonContext.getTenantDomain(),
+                                                     carbonContext.getTenantId());
         FutureTask<Map<K, ? extends V>> task = new FutureTask<Map<K, ? extends V>>(callable);
         cacheLoadExecService.submit(task);
         return task;
@@ -252,12 +266,14 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public CacheStatistics getStatistics() {
+        checkAccess();
         checkStatusStarted();
         return cacheStatistics;
     }
 
     @Override
     public void put(K key, V value) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.get(key);
@@ -326,6 +342,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndPut(K key, V value) {
+        checkAccess();
         checkStatusStarted();
         V oldValue = (V) getMap().get(key).getValue();
         put(key, value);
@@ -339,6 +356,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> destination = getMap();
         for (Map.Entry<? extends K, ? extends V> entry : map.entrySet()) {
@@ -359,6 +377,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean putIfAbsent(K key, V value) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (!map.containsKey(key)) {
@@ -371,6 +390,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(Object key) {
+        checkAccess();
         checkStatusStarted();
         CacheEntry entry = getMap().remove((K) key);
         boolean removed = entry != null;
@@ -382,6 +402,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(K key, V oldValue) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
@@ -394,6 +415,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndRemove(K key) {
+        checkAccess();
         checkStatusStarted();
         CacheEntry entry = getMap().remove(key);
         if (entry != null) {
@@ -406,6 +428,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key) && map.get(key).equals(new CacheEntry(key, oldValue))) {
@@ -418,6 +441,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V value) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key)) {
@@ -430,6 +454,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndReplace(K key, V value) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.containsKey(key)) {
@@ -442,6 +467,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll(Set<? extends K> keys) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         for (K key : keys) {
@@ -452,6 +478,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll() {
+        checkAccess();
         checkStatusStarted();
 
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -464,6 +491,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public CacheConfiguration<K, V> getConfiguration() {
+        checkAccess();
         if (cacheConfiguration == null) {
             cacheConfiguration = getDefaultCacheConfiguration();
         }
@@ -478,11 +506,13 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean registerCacheEntryListener(CacheEntryListener<? super K, ? super V> cacheEntryListener) {
+        checkAccess();
         return cacheEntryListeners.add(cacheEntryListener);
     }
 
     @Override
     public boolean unregisterCacheEntryListener(CacheEntryListener<?, ?> cacheEntryListener) {
+        checkAccess();
         return cacheEntryListeners.remove(cacheEntryListener);
     }
 
@@ -519,16 +549,19 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public String getName() {
+        checkAccess();
         return this.cacheName;
     }
 
     @Override
     public CacheManager getCacheManager() {
+        checkAccess();
         return cacheManager;
     }
 
     @Override
     public <T> T unwrap(Class<T> cls) {
+        checkAccess();
         if (cls.isAssignableFrom(this.getClass())) {
             return cls.cast(this);
         }
@@ -539,6 +572,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Iterator<Entry<K, V>> iterator() {
+        checkAccess();
         return new CacheEntryIterator<K, V>(getMap().values().iterator());
     }
 
@@ -549,6 +583,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void start() {
+        checkAccess();
         if (status == Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -557,6 +592,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void stop() {
+        checkAccess();
         checkStatusStarted();
         getMap().clear();
 
@@ -578,25 +614,30 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Status getStatus() {
+        checkAccess();
         return status;
     }
 
     public boolean isEmpty() {
+        checkAccess();
         return getMap().isEmpty();
     }
 
     public void expire(K key) {
+        checkAccess();
         CacheEntry entry = getMap().remove(key);
         notifyCacheEntryExpired(key, (V) entry.getValue());
     }
 
     public void evict(K key) {
+        checkAccess();
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         map.remove(key);
     }
 
     public void setCacheConfiguration(CacheConfigurationImpl cacheConfiguration) {
+        checkAccess();
         this.cacheConfiguration = cacheConfiguration;
     }
 
@@ -632,6 +673,33 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         }
     }
 
+    private void checkAccess() {
+        CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if (carbonContext == null) {
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        String callerTenantDomain = carbonContext.getTenantDomain();
+        if (callerTenantDomain == null) {
+            throw new IllegalStateException("Tenant domain cannot be " + ownerTenantDomain);
+        }
+        int callerTenantId = carbonContext.getTenantId();
+        if (callerTenantId == MultitenantConstants.INVALID_TENANT_ID) {
+            throw new IllegalStateException("Tenant ID cannot be " + ownerTenantId);
+        }
+
+        if (callerTenantDomain.equals(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME) &&
+            callerTenantId == MultitenantConstants.SUPER_TENANT_ID) {
+            return;
+        }
+
+        if (!callerTenantDomain.equals(ownerTenantDomain) || callerTenantId != ownerTenantId) {
+            throw new SecurityException("Illegal access attempt to cache [" + cacheName +
+                                        "] owned by tenant {[" + ownerTenantDomain + "],[" +
+                                        ownerTenantId + "]} by tenant {[" + callerTenantDomain +
+                                        "],[" + callerTenantId + "]}");
+        }
+    }
+
     /**
      * Callable used for cache loader.
      *
@@ -642,17 +710,31 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         private final CacheImpl<K, V> cache;
         private final CacheLoader<K, ? extends V> cacheLoader;
         private final K key;
+        private final String tenantDomain;
+        private final int tenantId;
 
-        CacheLoaderLoadCallable(CacheImpl<K, V> cache, CacheLoader<K, ? extends V> cacheLoader, K key) {
+        CacheLoaderLoadCallable(CacheImpl<K, V> cache, CacheLoader<K, ? extends V> cacheLoader, K key,
+                                String tenantDomain, int tenantId) {
             this.cache = cache;
             this.cacheLoader = cacheLoader;
             this.key = key;
+            this.tenantDomain = tenantDomain;
+            this.tenantId = tenantId;
         }
 
         @Override
         public V call() throws Exception {
-            Entry<K, ? extends V> entry = cacheLoader.load(key);
-            cache.put(entry.getKey(), entry.getValue());
+            Entry<K, ? extends V> entry = null;
+            try {
+                PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                carbonContext.setTenantDomain(tenantDomain);
+                carbonContext.setTenantId(tenantId);
+                entry = cacheLoader.load(key);
+                cache.put(entry.getKey(), entry.getValue());
+            } catch (Exception e) {
+                log.error("Could not load cache item with key " + key + " into cache " + cache.getName() + " owned by tenant ", e);
+                throw e;
+            }
             return entry.getValue();
         }
     }
@@ -667,25 +749,39 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         private final CacheImpl<K, V> cache;
         private final CacheLoader<K, ? extends V> cacheLoader;
         private final Collection<? extends K> keys;
+        private final String tenantDomain;
+        private final int tenantId;
 
         CacheLoaderLoadAllCallable(CacheImpl<K, V> cache,
                                    CacheLoader<K, ? extends V> cacheLoader,
-                                   Collection<? extends K> keys) {
+                                   Collection<? extends K> keys,
+                                   String tenantDomain, int tenantId) {
             this.cache = cache;
             this.cacheLoader = cacheLoader;
             this.keys = keys;
+            this.tenantDomain = tenantDomain;
+            this.tenantId = tenantId;
         }
 
         @Override
         public Map<K, ? extends V> call() throws Exception {
-            ArrayList<K> keysNotInStore = new ArrayList<K>();
-            for (K key : keys) {
-                if (!cache.containsKey(key)) {
-                    keysNotInStore.add(key);
+            Map<K, ? extends V> value;
+            try {
+                PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+                carbonContext.setTenantDomain(tenantDomain);
+                carbonContext.setTenantId(tenantId);
+                ArrayList<K> keysNotInStore = new ArrayList<K>();
+                for (K key : keys) {
+                    if (!cache.containsKey(key)) {
+                        keysNotInStore.add(key);
+                    }
                 }
+                value = cacheLoader.loadAll(keysNotInStore);
+                cache.putAll(value);
+            } catch (Exception e) {
+                log.error("Could not load all cache items into cache " + cache.getName() + " owned by tenant ", e);
+                throw e;
             }
-            Map<K, ? extends V> value = cacheLoader.loadAll(keysNotInStore);
-            cache.putAll(value);
             return value;
         }
     }
