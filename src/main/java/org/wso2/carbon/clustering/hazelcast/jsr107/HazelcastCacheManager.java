@@ -17,6 +17,9 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
+import org.wso2.carbon.context.CarbonContext;
+import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
+
 import javax.cache.Cache;
 import javax.cache.CacheBuilder;
 import javax.cache.CacheException;
@@ -29,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static org.wso2.carbon.clustering.hazelcast.jsr107.Util.checkAccess;
 
 /**
  * TODO: class description
@@ -38,34 +42,45 @@ public class HazelcastCacheManager implements CacheManager {
     private volatile Status status;
     private String name;
 
+    private String ownerTenantDomain;
+    private int ownerTenantId;
+
     public HazelcastCacheManager(String name) {
+        CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
+        if (carbonContext == null) {
+            throw new IllegalStateException("CarbonContext cannot be null");
+        }
+        ownerTenantDomain = carbonContext.getTenantDomain();
+        if (ownerTenantDomain == null) {
+            throw new IllegalStateException("Tenant domain cannot be " + ownerTenantDomain);
+        }
+        ownerTenantId = carbonContext.getTenantId();
+        if (ownerTenantId == MultitenantConstants.INVALID_TENANT_ID) {
+            throw new IllegalStateException("Tenant ID cannot be " + ownerTenantId);
+        }
         this.name = name;
         status = Status.STARTED;
     }
 
     @Override
     public String getName() {
+        checkAccess(ownerTenantDomain, ownerTenantId);
         return this.name;
     }
 
     @Override
     public Status getStatus() {
+        checkAccess(ownerTenantDomain, ownerTenantId);
         return status;
     }
 
     @Override
     public <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName) {
-        //TODO: Check/set tenant info
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
-            throw new IllegalStateException("CarbonContext cannot be null");
-        }
-        */
+        checkAccess(ownerTenantDomain, ownerTenantId);
         if (caches.get(cacheName) != null) {
             throw new CacheException("Cache " + cacheName + " already exists");
         }
 
-        //TODO: where did these naming constraints come from?
         if (cacheName == null) {
             throw new NullPointerException("A cache name must must not be null.");
         }
@@ -81,17 +96,12 @@ public class HazelcastCacheManager implements CacheManager {
     @Override
     @SuppressWarnings("unchecked")
     public <K, V> Cache<K, V> getCache(String cacheName) {
-        //TODO: Check/set tenant info
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
-            throw new IllegalStateException("CarbonContext cannot be null");
-        }
-        */
+        checkAccess(ownerTenantDomain, ownerTenantId);
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
         Cache<K, V> cache = (Cache<K, V>) caches.get(cacheName);
-        if(cache == null){
+        if (cache == null) {
             cache = new CacheImpl<K, V>(cacheName, this);
             caches.put(cacheName, cache);
         }
@@ -100,12 +110,7 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public Iterable<Cache<?, ?>> getCaches() {
-        //TODO: Check/set tenant info
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
-            throw new IllegalStateException("CarbonContext cannot be null");
-        }
-        */
+        checkAccess(ownerTenantDomain, ownerTenantId);
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -118,12 +123,7 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public boolean removeCache(String cacheName) {
-        //TODO: Check/set tenant info
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
-            throw new IllegalStateException("CarbonContext cannot be null");
-        }
-        */
+        checkAccess(ownerTenantDomain, ownerTenantId);
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -141,22 +141,19 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public javax.transaction.UserTransaction getUserTransaction() {
+        checkAccess(ownerTenantDomain, ownerTenantId);
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public boolean isSupported(OptionalFeature optionalFeature) {
+        checkAccess(ownerTenantDomain, ownerTenantId);
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void shutdown() {
-        //TODO: Check/set tenant info
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
-            throw new IllegalStateException("CarbonContext cannot be null");
-        }
-        */
+        checkAccess(ownerTenantDomain, ownerTenantId);
         for (Cache<?, ?> cache : caches.values()) {
             try {
                 cache.stop();
@@ -169,26 +166,22 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public <T> T unwrap(Class<T> cls) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        checkAccess(ownerTenantDomain, ownerTenantId);
+        if (cls.isAssignableFrom(this.getClass())) {
+            return cls.cast(this);
+        }
+
+        throw new IllegalArgumentException("Unwrapping to " + cls +
+                                           " is not a supported by this implementation");
     }
 
     boolean isEmpty() {
-        //TODO: Check/set tenant info
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
-            throw new IllegalStateException("CarbonContext cannot be null");
-        }
-        */
+        checkAccess(ownerTenantDomain, ownerTenantId);
         return caches.isEmpty();
     }
 
     void addCache(CacheImpl cache) {
-        //TODO: Check/set tenant info
-        /*CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
-        if(carbonContext == null){
-            throw new IllegalStateException("CarbonContext cannot be null");
-        }
-        */
+        checkAccess(ownerTenantDomain, ownerTenantId);
         caches.put(cache.getName(), cache);
     }
 }

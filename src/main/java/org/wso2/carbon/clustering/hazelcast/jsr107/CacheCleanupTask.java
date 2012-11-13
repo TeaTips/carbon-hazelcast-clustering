@@ -19,6 +19,8 @@ package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
 import javax.cache.Cache;
 import javax.cache.CacheConfiguration;
@@ -30,7 +32,7 @@ import java.util.Map;
 
 /**
  * TODO: class description
- *
+ * <p/>
  * TODO: Also handle cache eviction - remove items from cache when the cache is full
  */
 public class CacheCleanupTask implements Runnable {
@@ -45,51 +47,80 @@ public class CacheCleanupTask implements Runnable {
         // Get the configurations from the caches
         // Check the timeout policy and clear out old values
         try {
-            Map<String,CacheManager> cacheManagers =
-                    ((CacheManagerFactoryImpl) Caching.getCacheManagerFactory()).getCacheManagers();
-            for (CacheManager cacheManager : cacheManagers.values()) {  // All CacheManagers
-                Iterable<Cache<?,?>> caches = cacheManager.getCaches();
-                for (Cache<?, ?> cache : caches) { // All Caches in a CacheManager
-                    CacheConfiguration cacheConfiguration = cache.getConfiguration();
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext carbonContext = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            carbonContext.setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
+            carbonContext.setTenantId(MultitenantConstants.SUPER_TENANT_ID);
 
-                    CacheConfiguration.Duration modifiedExpiry =
-                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED);
-                    long modifiedExpiryDuration =
-                            modifiedExpiry.getTimeUnit().toMillis(modifiedExpiry.getDurationAmount());
-
-                    CacheConfiguration.Duration accessedExpiry =
-                            cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED);
-                    long accessedExpiryDuration =
-                            accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
-
-                    CacheImpl cacheImpl = (CacheImpl) cache;
-                    Collection<CacheEntry> cacheEntries = cacheImpl.getAll();
-                    for (CacheEntry entry : cacheEntries) { // All Cache entries in a Cache
-                        long lastAccessed = entry.getLastAccessed();
-                        long lastModified = entry.getLastModified();
-                        long now = System.currentTimeMillis();
-
-                        if (log.isDebugEnabled()) {
-                            log.debug("Cache:" + cache.getName() + ", entry:" + entry.getKey() + ", lastAccessed: " +
-                                      new Date(lastAccessed) + ", lastModified: " + new Date(lastModified));
-                        }
-                        if(now - lastAccessed >= accessedExpiryDuration ||
-                           now - lastModified >= modifiedExpiryDuration){
-                            cacheImpl.expire(entry.getKey());
-                            log.info("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
-                        }
-                    }
-                    if(cacheImpl.isEmpty()){
-                        cacheManager.removeCache(cache.getName());
+            Map<String, Map<String, CacheManager>> globalCacheManagerMap =
+                    ((CacheManagerFactoryImpl) Caching.getCacheManagerFactory()).getGlobalCacheManagerMap();
+            for (Map.Entry<String, Map<String, CacheManager>> cacheManagerEntry : globalCacheManagerMap.entrySet()) {  // All CacheManagers of all tenants
+                String tenantDomain = cacheManagerEntry.getKey();
+                Map<String, CacheManager> tenantCacheManagers = cacheManagerEntry.getValue();
+                for (Map.Entry<String, CacheManager> entry : tenantCacheManagers.entrySet()) {  // All CacheManagers of a tenant
+                    String cacheManagerName = entry.getKey();
+                    CacheManager cacheManager = entry.getValue();
+                    boolean isCacheManagerShutdown = cleanup(cacheManager);
+                    if (isCacheManagerShutdown) {
+                        tenantCacheManagers.remove(cacheManagerName);
                     }
                 }
-                if(((HazelcastCacheManager)cacheManager).isEmpty()){
-                    cacheManager.shutdown();
-                    ((CacheManagerFactoryImpl) Caching.getCacheManagerFactory()).removeCacheManager(cacheManager.getName());
+                if (tenantCacheManagers.isEmpty()) {
+                    globalCacheManagerMap.remove(tenantDomain);
                 }
             }
         } catch (Throwable t) {
             log.error("Error occurred while running cache expiry task", t);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
         }
+    }
+
+    /**
+     * @param cacheManager The CacheManager to be cleaned up
+     * @return true if the cacheManager was shutdown
+     */
+    @SuppressWarnings("unchecked")
+    private boolean cleanup(CacheManager cacheManager) {
+        Iterable<Cache<?, ?>> caches = cacheManager.getCaches();
+        for (Cache<?, ?> cache : caches) { // All Caches in a CacheManager
+            CacheConfiguration cacheConfiguration = cache.getConfiguration();
+
+            CacheConfiguration.Duration modifiedExpiry =
+                    cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED);
+            long modifiedExpiryDuration =
+                    modifiedExpiry.getTimeUnit().toMillis(modifiedExpiry.getDurationAmount());
+
+            CacheConfiguration.Duration accessedExpiry =
+                    cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED);
+            long accessedExpiryDuration =
+                    accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
+
+            CacheImpl cacheImpl = (CacheImpl) cache;
+            Collection<CacheEntry> cacheEntries = cacheImpl.getAll();
+            for (CacheEntry entry : cacheEntries) { // All Cache entries in a Cache
+                long lastAccessed = entry.getLastAccessed();
+                long lastModified = entry.getLastModified();
+                long now = System.currentTimeMillis();
+
+                if (log.isDebugEnabled()) {
+                    log.debug("Cache:" + cache.getName() + ", entry:" + entry.getKey() + ", lastAccessed: " +
+                              new Date(lastAccessed) + ", lastModified: " + new Date(lastModified));
+                }
+                if (now - lastAccessed >= accessedExpiryDuration ||
+                    now - lastModified >= modifiedExpiryDuration) {
+                    cacheImpl.expire(entry.getKey());
+                    log.info("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
+                }
+            }
+            if (cacheImpl.isEmpty()) { // If a cache is empty, remove it
+                cacheManager.removeCache(cache.getName());
+            }
+        }
+        if (((HazelcastCacheManager) cacheManager).isEmpty()) { // If cacheManager does not have any cache, shut it down
+            cacheManager.shutdown();
+            return true;
+        }
+        return false;
     }
 }
