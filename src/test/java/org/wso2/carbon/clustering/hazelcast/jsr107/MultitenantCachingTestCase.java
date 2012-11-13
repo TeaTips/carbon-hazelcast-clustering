@@ -32,7 +32,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 /**
- * TODO: class description
+ * Test case for tenant based caching scenarios
  */
 public class MultitenantCachingTestCase {
     private Cache<String, Integer> cache;
@@ -43,8 +43,9 @@ public class MultitenantCachingTestCase {
         String cacheName = "sampleCache";
         // CacheManager cacheManager = Caching.getCacheManager(); // same as Caching.getCacheManagerFactory().getCacheManager("__default__");
 
-        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("foo.com");
-        PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+        PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        cc.setTenantDomain("foo.com");
+        cc.setTenantId(1);
 
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
         cache = cacheManager.getCache(cacheName);
@@ -60,8 +61,9 @@ public class MultitenantCachingTestCase {
 
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("bar.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(2);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("bar.com");
+            cc.setTenantId(2);
 
             cache.get(key1); // Should throw SecurityException
         } finally {
@@ -78,8 +80,9 @@ public class MultitenantCachingTestCase {
 
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("foo.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("foo.com");
+            cc.setTenantId(1);
 
             assertEquals(cache.get(key1), sampleValue);
         } finally {
@@ -99,8 +102,9 @@ public class MultitenantCachingTestCase {
         // Tenant wso2.com
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("wso2.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("wso2.com");
+            cc.setTenantId(1);
 
             CacheManager cacheManager =
                     Caching.getCacheManagerFactory().getCacheManager(cacheManagerName);
@@ -117,8 +121,9 @@ public class MultitenantCachingTestCase {
         // Tenant ibm.com
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("ibm.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(2);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("ibm.com");
+            cc.setTenantId(2);
 
             CacheManager cacheManager =
                     Caching.getCacheManagerFactory().getCacheManager(cacheManagerName);
@@ -148,8 +153,9 @@ public class MultitenantCachingTestCase {
         // Tenant wso2.com
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("apple.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("apple.com");
+            cc.setTenantId(1);
 
             CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
             Cache<String, Integer> cache1 = cacheManager.getCache(cacheName);
@@ -165,8 +171,9 @@ public class MultitenantCachingTestCase {
         // Tenant orange.com
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("orange.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(2);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("orange.com");
+            cc.setTenantId(2);
 
             CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
             Cache<String, Integer> cache1 = cacheManager.getCache(cacheName);
@@ -194,8 +201,9 @@ public class MultitenantCachingTestCase {
         // Tenant wso2.org
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("wso2.org");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(4);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("wso2.org");
+            cc.setTenantId(4);
 
             CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
             Cache<String, Integer> cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
@@ -211,8 +219,9 @@ public class MultitenantCachingTestCase {
         // Tenant afkham.org
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("afkham.org");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(5);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("afkham.org");
+            cc.setTenantId(5);
 
             CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
             Cache<String, Integer> cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
@@ -231,8 +240,9 @@ public class MultitenantCachingTestCase {
     public void testCreateExistingCache() {
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("apple.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("apple.com");
+            cc.setTenantId(1);
             CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
             String cacheName = "testCreateExistingCache";
             cacheManager.<String, Integer>createCacheBuilder(cacheName).
@@ -253,8 +263,9 @@ public class MultitenantCachingTestCase {
     public void testCacheLoaderForTenants() {
         try {
             PrivilegedCarbonContext.startTenantFlow();
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("bikes.com");
-            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantDomain("bikes.com");
+            cc.setTenantId(1);
             CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
             String cacheName = "testCacheLoaderForTenants";
             Cache<String, String> cache =
