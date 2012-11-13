@@ -26,9 +26,6 @@ import javax.cache.Caching;
 import java.io.File;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 
 /**
  * TODO: class description
@@ -134,7 +131,53 @@ public class MultitenantCachingTestCase {
         } finally {
             PrivilegedCarbonContext.endTenantFlow();
         }
+    }
 
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107.mt"},
+          description = "")
+    public void testCreateCacheWithSameNameByTwoTenantsWithDefaultCacheManager() {
+        Integer sampleValue = 1245;
+        String key1 = "testCreateCacheWithSameNameByTwoTenants-123";
+        String key2 = "testCreateCacheWithSameNameByTwoTenants-1234";
+        String cacheName = "sampleCache";
+
+        // Tenant wso2.com
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("apple.com");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+
+            CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
+            Cache<String, Integer> cache1 = cacheManager.getCache(cacheName);
+            cache1.put(key1, sampleValue);
+            cache1.put(key2, sampleValue);
+            cache1 = cacheManager.getCache(cacheName);
+            assertEquals(sampleValue, cache1.get(key1));
+            checkCacheSize(cache1, 2);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+
+        // Tenant wso2.com
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("orange.com");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(2);
+
+            CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
+            Cache<String, Integer> cache1 = cacheManager.getCache(cacheName);
+            cache1.put(key1, sampleValue);
+            cache1 = cacheManager.getCache(cacheName);
+            assertEquals(sampleValue, cache1.get(key1));
+
+            checkCacheSize(cache1, 1);
+            cache1 = cacheManager.getCache(cacheName);
+            cache1.remove(key1);
+            cache1 = cacheManager.getCache(cacheName);
+            checkCacheSize(cache1, 0);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
     }
 
     private void checkCacheSize(Cache<String, Integer> cache1, int expectedCacheSize) {
