@@ -92,13 +92,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private String ownerTenantDomain;
     private int ownerTenantId;
 
-    //TODO: Remove this constructor
-    public CacheImpl(String tenantDomain, String cacheName, CacheManager cacheManager) {
-        this("$cache." + tenantDomain + "#" + cacheName, cacheManager);
-        this.cacheName = cacheName;
-        log.info("Created cache " + cacheName + " for tenant " + tenantDomain);
-    }
-
     public CacheImpl(String cacheName, CacheManager cacheManager) {
         CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
         if (carbonContext == null) {

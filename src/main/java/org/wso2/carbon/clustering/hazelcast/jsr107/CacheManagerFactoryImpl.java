@@ -108,9 +108,9 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
         return false;
     }
 
-    /*public void removeCacheManager(String name) {
+    public void removeCacheManager(String tenantDomain) {
         Util.checkAccess(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME,
                          MultitenantConstants.SUPER_TENANT_ID);
-        globalCacheManagerMap.remove(name);
-    }*/
+        globalCacheManagerMap.remove(tenantDomain);
+    }
 }

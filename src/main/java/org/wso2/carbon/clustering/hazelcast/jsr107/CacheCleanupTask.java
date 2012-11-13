@@ -52,8 +52,10 @@ public class CacheCleanupTask implements Runnable {
             carbonContext.setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
             carbonContext.setTenantId(MultitenantConstants.SUPER_TENANT_ID);
 
+            CacheManagerFactoryImpl cacheManagerFactory =
+                    (CacheManagerFactoryImpl) Caching.getCacheManagerFactory();
             Map<String, Map<String, CacheManager>> globalCacheManagerMap =
-                    ((CacheManagerFactoryImpl) Caching.getCacheManagerFactory()).getGlobalCacheManagerMap();
+                    cacheManagerFactory.getGlobalCacheManagerMap();
             for (Map.Entry<String, Map<String, CacheManager>> cacheManagerEntry : globalCacheManagerMap.entrySet()) {  // All CacheManagers of all tenants
                 String tenantDomain = cacheManagerEntry.getKey();
                 Map<String, CacheManager> tenantCacheManagers = cacheManagerEntry.getValue();
@@ -66,7 +68,7 @@ public class CacheCleanupTask implements Runnable {
                     }
                 }
                 if (tenantCacheManagers.isEmpty()) {
-                    globalCacheManagerMap.remove(tenantDomain);
+                    cacheManagerFactory.removeCacheManager(tenantDomain);
                 }
             }
         } catch (Throwable t) {
