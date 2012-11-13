@@ -17,32 +17,29 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
-import java.io.Serializable;
+import javax.cache.Cache;
+import javax.cache.CacheLoader;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * TODO: class description
  */
-class SerializableTestObject implements Serializable {
+class TestCacheLoader<K, V> implements CacheLoader<K, V> {
 
-    private String name;
-    private String address;
-    private Long id;
-
-     SerializableTestObject(String name, String address, Long id) {
-        this.name = name;
-        this.address = address;
-        this.id = id;
+    @Override
+    @SuppressWarnings("unchecked")
+    public Cache.Entry<K, V> load(K key) {
+        return new CacheEntry<K, V>(key, (V) ("key" + System.currentTimeMillis()));
     }
 
-     String getName() {
-        return name;
-    }
-
-     String getAddress() {
-        return address;
-    }
-
-     Long getId() {
-        return id;
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<K, V> loadAll(Iterable<? extends K> keys) {
+        Map<K, V> map = new HashMap<K, V>();
+        for (K key : keys) {
+            map.put(key, (V) ("key" + System.currentTimeMillis()));
+        }
+        return map;
     }
 }

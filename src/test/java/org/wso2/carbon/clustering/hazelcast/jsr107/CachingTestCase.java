@@ -22,11 +22,9 @@ import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.cache.Cache;
 import javax.cache.CacheConfiguration;
-import javax.cache.CacheLoader;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import java.io.File;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -237,24 +235,5 @@ public class CachingTestCase {
             }
         }
         assertNotNull(cache.get("key1"));
-    }
-
-    private static class TestCacheLoader<K, V> implements CacheLoader<K, V> {
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public Cache.Entry<K, V> load(K key) {
-            return new CacheEntry<K, V>(key, (V) ("key" + System.currentTimeMillis()));
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public Map<K, V> loadAll(Iterable<? extends K> keys) {
-            Map<K, V> map = new HashMap<K, V>();
-            for (K key : keys) {
-                map.put(key, (V) ("key" + System.currentTimeMillis()));
-            }
-            return map;
-        }
     }
 }

@@ -21,11 +21,15 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.cache.Cache;
+import javax.cache.CacheConfiguration;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import java.io.File;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 /**
  * TODO: class description
@@ -110,7 +114,7 @@ public class MultitenantCachingTestCase {
             PrivilegedCarbonContext.endTenantFlow();
         }
 
-        // Tenant wso2.com
+        // Tenant ibm.com
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("ibm.com");
@@ -158,7 +162,7 @@ public class MultitenantCachingTestCase {
             PrivilegedCarbonContext.endTenantFlow();
         }
 
-        // Tenant wso2.com
+        // Tenant orange.com
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("orange.com");
@@ -180,6 +184,96 @@ public class MultitenantCachingTestCase {
         }
     }
 
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107.mt"},
+          description = "")
+    public void testCacheBuilderForTenants() {
+        String cacheName = "testCacheBuilderForTenants";
+        String key = "kxkx";
+        int value = 9876;
+
+        // Tenant wso2.org
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("wso2.org");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(4);
+
+            CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
+            Cache<String, Integer> cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
+                    setExpiry(CacheConfiguration.ExpiryType.MODIFIED, new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).
+                    setStoreByValue(false).build();
+
+            cache.put(key, value);
+            assertEquals(cache.get(key).intValue(), value);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+
+        // Tenant afkham.org
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("afkham.org");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(5);
+
+            CacheManager cacheManager = Caching.getCacheManager(); // Default CacheManager
+            Cache<String, Integer> cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
+                    setExpiry(CacheConfiguration.ExpiryType.MODIFIED, new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).
+                    setStoreByValue(false).build();
+            cache.put(key, value);
+            assertEquals(cache.get(key).intValue(), value);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107.mt"},
+          expectedExceptions = {javax.cache.CacheException.class},
+          description = "")
+    public void testCreateExistingCache() {
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("apple.com");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+            CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+            String cacheName = "testCreateExistingCache";
+            cacheManager.<String, Integer>createCacheBuilder(cacheName).
+                    setExpiry(CacheConfiguration.ExpiryType.MODIFIED,
+                              new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).
+                    setStoreByValue(false).build();
+            cacheManager.<String, Integer>createCacheBuilder(cacheName).
+                    setExpiry(CacheConfiguration.ExpiryType.MODIFIED,
+                              new CacheConfiguration.Duration(TimeUnit.SECONDS, 10)).
+                    setStoreByValue(false).build();
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107.mt"},
+          description = "")
+    public void testCacheLoaderForTenants() {
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantDomain("bikes.com");
+            PrivilegedCarbonContext.getThreadLocalCarbonContext().setTenantId(1);
+            CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("test");
+            String cacheName = "testCacheLoaderForTenants";
+            Cache<String, String> cache =
+                    cacheManager.<String, String>createCacheBuilder(cacheName).
+                            setCacheLoader(new TestCacheLoader<String, String>()).build();
+            Future<String> future = cache.load("key1");
+            while (!future.isDone()) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ignored) {
+                }
+            }
+            assertNotNull(cache.get("key1"));
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    @SuppressWarnings("unused")
     private void checkCacheSize(Cache<String, Integer> cache1, int expectedCacheSize) {
         int cacheSize = 0;
         for (Cache.Entry<String, Integer> entry : cache1) {
