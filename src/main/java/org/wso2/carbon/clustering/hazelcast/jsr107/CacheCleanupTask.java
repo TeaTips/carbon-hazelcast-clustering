@@ -112,7 +112,9 @@ public class CacheCleanupTask implements Runnable {
                 if (now - lastAccessed >= accessedExpiryDuration ||
                     now - lastModified >= modifiedExpiryDuration) {
                     cacheImpl.expire(entry.getKey());
-                    log.info("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
+                    if (log.isDebugEnabled()) {
+                        log.debug("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
+                    }
                 }
             }
             if (cacheImpl.isEmpty()) { // If a cache is empty, remove it
