@@ -205,9 +205,14 @@ public class CachingTestCase {
             hashSet.add("key" + i);
         }
         Future<Map<String, ? extends String>> future = cache.loadAll(hashSet);
-
+        while (!future.isDone()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ignored) {
+            }
+        }
         for (int i = 1; i < 6; i++) {
-//            assertNotNull(cache.get("key" + i));
+            assertNotNull(cache.get("key" + i));
         }
     }
 
@@ -229,14 +234,19 @@ public class CachingTestCase {
         assertNotNull(cache.get("key1"));
     }
 
+    //TODO: tenant tests
+
+
     private static class TestCacheLoader<K, V> implements CacheLoader<K, V> {
 
         @Override
+        @SuppressWarnings("unchecked")
         public Cache.Entry<K, V> load(K key) {
             return new CacheEntry<K, V>(key, (V) ("key" + System.currentTimeMillis()));
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public Map<K, V> loadAll(Iterable<? extends K> keys) {
             Map<K, V> map = new HashMap<K, V>();
             for (K key : keys) {
@@ -245,5 +255,4 @@ public class CachingTestCase {
             return map;
         }
     }
-    //TODO: tenant tests
 }
