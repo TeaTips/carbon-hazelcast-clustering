@@ -55,7 +55,7 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
     public CacheManager getCacheManager(String name) {
         String tenantDomain = Util.getTenantDomain();
         CacheManager cacheManager;
-        synchronized ((tenantDomain + name).intern()) {
+        synchronized ((tenantDomain + "_$_#" + name).intern()) {
             Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
             if(cacheManagers == null){
                 cacheManagers = new ConcurrentHashMap<String, CacheManager>();

@@ -41,7 +41,9 @@ public class CacheCleanupTask implements Runnable {
     @Override
     @SuppressWarnings("unchecked")
     public synchronized void run() {
-        log.info("Cache expiry scheduler running...");
+        if (log.isDebugEnabled()) {
+            log.debug("Cache expiry scheduler running...");
+        }
 
         // Get all the caches
         // Get the configurations from the caches
@@ -117,11 +119,14 @@ public class CacheCleanupTask implements Runnable {
                     }
                 }
             }
-            if (cacheImpl.isEmpty()) { // If a cache is empty, remove it
+            if (cacheImpl.isIdle()) { // If a cache is empty, remove it
+                if (log.isDebugEnabled()) {
+                    log.debug("Removed cache: " + cache.getName());
+                }
                 cacheManager.removeCache(cache.getName());
             }
         }
-        if (((HazelcastCacheManager) cacheManager).isEmpty()) { // If cacheManager does not have any cache, shut it down
+        if (((HazelcastCacheManager) cacheManager).isIdle()) { // If cacheManager does not have any cache, shut it down
             cacheManager.shutdown();
             return true;
         }

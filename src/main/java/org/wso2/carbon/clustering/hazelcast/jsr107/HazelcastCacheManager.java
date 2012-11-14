@@ -38,12 +38,14 @@ import static org.wso2.carbon.clustering.hazelcast.jsr107.Util.checkAccess;
  * TODO: class description
  */
 public class HazelcastCacheManager implements CacheManager {
+    private static final long MAX_IDLE_TIME_MILLIS = 15 * 60 * 1000; // 15mins
     private Map<String, Cache<?, ?>> caches = new ConcurrentHashMap<String, Cache<?, ?>>();
     private volatile Status status;
     private String name;
 
     private String ownerTenantDomain;
     private int ownerTenantId;
+    private long lastAccessed = System.currentTimeMillis();
 
     public HazelcastCacheManager(String name) {
         CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
@@ -77,6 +79,7 @@ public class HazelcastCacheManager implements CacheManager {
     @Override
     public <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName) {
         checkAccess(ownerTenantDomain, ownerTenantId);
+        lastAccessed = System.currentTimeMillis();
         if (caches.get(cacheName) != null) {
             throw new CacheException("Cache " + cacheName + " already exists");
         }
@@ -100,6 +103,7 @@ public class HazelcastCacheManager implements CacheManager {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
+        lastAccessed = System.currentTimeMillis();
         Cache<K, V> cache;
         synchronized (cacheName.intern()) {
             cache = (Cache<K, V>) caches.get(cacheName);
@@ -126,6 +130,7 @@ public class HazelcastCacheManager implements CacheManager {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
+        lastAccessed = System.currentTimeMillis();
         HashSet<Cache<?, ?>> set = new HashSet<Cache<?, ?>>();
         for (Cache<?, ?> cache : caches.values()) {
             set.add(cache);
@@ -140,8 +145,9 @@ public class HazelcastCacheManager implements CacheManager {
             throw new IllegalStateException();
         }
         if (cacheName == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Cache name cannot be null");
         }
+        lastAccessed = System.currentTimeMillis();
         Cache<?, ?> oldCache;
         oldCache = caches.remove(cacheName);
         if (oldCache != null) {
@@ -187,16 +193,16 @@ public class HazelcastCacheManager implements CacheManager {
                                            " is not a supported by this implementation");
     }
 
-    boolean isEmpty() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
-        return caches.isEmpty();
-    }
-
     void addCache(CacheImpl cache) {
         checkAccess(ownerTenantDomain, ownerTenantId);
         String cacheName = cache.getName();
         synchronized (cacheName.intern()) {
             caches.put(cacheName, cache);
         }
+    }
+
+    boolean isIdle() {
+        long timeDiff = System.currentTimeMillis() - lastAccessed;
+        return caches.isEmpty() && (timeDiff >= MAX_IDLE_TIME_MILLIS);
     }
 }
