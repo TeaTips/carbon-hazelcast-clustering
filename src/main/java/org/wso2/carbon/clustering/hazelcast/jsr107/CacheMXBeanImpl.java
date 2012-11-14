@@ -17,7 +17,10 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+
 import javax.cache.Cache;
+import javax.cache.CacheStatistics;
 import javax.cache.Status;
 import javax.cache.mbeans.CacheMXBean;
 import java.util.Date;
@@ -28,88 +31,134 @@ import java.util.Date;
 public class CacheMXBeanImpl implements CacheMXBean {
 
     private final Cache cache;
+    private String ownerTenantDomain;
+    private int ownerTenantId;
 
     /**
      * Constructor
      *
-     * @param cache the cache
+     * @param cache             the cache
+     * @param ownerTenantDomain
+     * @param ownerTenantId
      */
-    public CacheMXBeanImpl(Cache cache) {
+    public CacheMXBeanImpl(Cache cache, String ownerTenantDomain, int ownerTenantId) {
         this.cache = cache;
+        this.ownerTenantDomain = ownerTenantDomain;
+        this.ownerTenantId = ownerTenantId;
     }
 
     @Override
     public void clear() {
-        cache.getStatistics().clear();
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            setTenantCredentialsInCarbonContext();
+            getCacheStatistics().clear();
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
     }
 
     @Override
     public Date getStartAccumulationDate() {
-        return cache.getStatistics().getStartAccumulationDate();
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            setTenantCredentialsInCarbonContext();
+            return getCacheStatistics().getStartAccumulationDate();
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
     }
 
     @Override
     public long getCacheHits() {
-        return cache.getStatistics().getCacheHits();
+        return getCacheStatistics().getCacheHits();
     }
 
     @Override
     public float getCacheHitPercentage() {
-        return cache.getStatistics().getCacheHitPercentage();
+        return getCacheStatistics().getCacheHitPercentage();
     }
 
     @Override
     public long getCacheMisses() {
-        return cache.getStatistics().getCacheMisses();
+        return getCacheStatistics().getCacheMisses();
     }
 
     @Override
     public float getCacheMissPercentage() {
-        return cache.getStatistics().getCacheMissPercentage();
+        return getCacheStatistics().getCacheMissPercentage();
     }
 
     @Override
     public long getCacheGets() {
-        return cache.getStatistics().getCacheGets();
+        return getCacheStatistics().getCacheGets();
     }
 
     @Override
     public long getCachePuts() {
-        return cache.getStatistics().getCachePuts();
+        return getCacheStatistics().getCachePuts();
     }
 
     @Override
     public long getCacheRemovals() {
-        return cache.getStatistics().getCacheRemovals();
+        return getCacheStatistics().getCacheRemovals();
     }
 
     @Override
     public long getCacheEvictions() {
-        return cache.getStatistics().getCacheEvictions();
+        return getCacheStatistics().getCacheEvictions();
     }
 
     @Override
     public float getAverageGetMillis() {
-        return cache.getStatistics().getAverageGetMillis();
+        return getCacheStatistics().getAverageGetMillis();
     }
 
     @Override
     public float getAveragePutMillis() {
-        return cache.getStatistics().getAveragePutMillis();
+        return getCacheStatistics().getAveragePutMillis();
     }
 
     @Override
     public float getAverageRemoveMillis() {
-        return cache.getStatistics().getAverageRemoveMillis();
+        return getCacheStatistics().getAverageRemoveMillis();
+    }
+
+    private CacheStatistics getCacheStatistics() {
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            setTenantCredentialsInCarbonContext();
+            return cache.getStatistics();
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
     }
 
     @Override
     public String getName() {
-        return cache.getName();
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            setTenantCredentialsInCarbonContext();
+            return cache.getName();
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
     }
 
     @Override
     public Status getStatus() {
-        return cache.getStatus();
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            setTenantCredentialsInCarbonContext();
+            return cache.getStatus();
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
+        }
+    }
+
+    private void setTenantCredentialsInCarbonContext() {
+        PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+        cc.setTenantId(ownerTenantId);
+        cc.setTenantDomain(ownerTenantDomain);
     }
 }

@@ -126,7 +126,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
             localCache = new ConcurrentHashMap<K, CacheEntry<K, V>>();
         }
         cacheStatistics = new CacheStatisticsImpl();
-        this.cacheMXBean = new CacheMXBeanImpl(this);
+        this.cacheMXBean = new CacheMXBeanImpl(this, ownerTenantDomain, ownerTenantId);
         registerMBean(cacheMXBean, ownerTenantDomain);
         status = Status.STARTED;
     }
