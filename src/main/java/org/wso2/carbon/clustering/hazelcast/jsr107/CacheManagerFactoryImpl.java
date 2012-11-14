@@ -55,17 +55,19 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
     public CacheManager getCacheManager(String name) {
         String tenantDomain = Util.getTenantDomain();
         CacheManager cacheManager;
-        Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
-        if(cacheManagers == null){
-            cacheManagers = new ConcurrentHashMap<String, CacheManager>();
-            globalCacheManagerMap.put(tenantDomain, cacheManagers);
-            cacheManager = new HazelcastCacheManager(name);
-            cacheManagers.put(name, cacheManager);
-        } else {
-            cacheManager = cacheManagers.get(name);
-            if (cacheManager == null) {
+        synchronized ((tenantDomain + name).intern()) {
+            Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
+            if(cacheManagers == null){
+                cacheManagers = new ConcurrentHashMap<String, CacheManager>();
+                globalCacheManagerMap.put(tenantDomain, cacheManagers);
                 cacheManager = new HazelcastCacheManager(name);
                 cacheManagers.put(name, cacheManager);
+            } else {
+                cacheManager = cacheManagers.get(name);
+                if (cacheManager == null) {
+                    cacheManager = new HazelcastCacheManager(name);
+                    cacheManagers.put(name, cacheManager);
+                }
             }
         }
         return cacheManager;

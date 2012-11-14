@@ -46,10 +46,15 @@ public class CacheBuilderImpl<K, V> implements CacheBuilder<K, V> {
 
     @Override
     public Cache<K, V> build() {
-        cache = new CacheImpl<K, V>(cacheName, cacheManager);
-        //TODO: set the tenant info
-        cache.setCacheConfiguration(cacheConfiguration);
-        cacheManager.addCache(cache);
+        synchronized (cacheName.intern()) {
+            cache = (CacheImpl<K, V>) cacheManager.getExistingCache(cacheName);
+            if (cache == null) {
+                cache = new CacheImpl<K, V>(cacheName, cacheManager);
+                //TODO: set the tenant info
+                cache.setCacheConfiguration(cacheConfiguration);
+                cacheManager.addCache(cache);
+            }
+        }
         return cache;
     }
 

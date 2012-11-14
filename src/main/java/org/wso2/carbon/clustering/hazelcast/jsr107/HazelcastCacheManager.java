@@ -100,10 +100,22 @@ public class HazelcastCacheManager implements CacheManager {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        Cache<K, V> cache = (Cache<K, V>) caches.get(cacheName);
-        if (cache == null) {
-            cache = new CacheImpl<K, V>(cacheName, this);
-            caches.put(cacheName, cache);
+        Cache<K, V> cache;
+        synchronized (cacheName.intern()) {
+            cache = (Cache<K, V>) caches.get(cacheName);
+            if (cache == null) {
+                cache = new CacheImpl<K, V>(cacheName, this);
+                caches.put(cacheName, cache);
+            }
+        }
+        return cache;
+    }
+
+    @SuppressWarnings("unchecked")
+    final <K, V> Cache<K, V> getExistingCache(String cacheName) {
+        Cache<K, V> cache;
+        synchronized (cacheName.intern()) {
+            cache = (Cache<K, V>) caches.get(cacheName);
         }
         return cache;
     }
@@ -182,6 +194,9 @@ public class HazelcastCacheManager implements CacheManager {
 
     void addCache(CacheImpl cache) {
         checkAccess(ownerTenantDomain, ownerTenantId);
-        caches.put(cache.getName(), cache);
+        String cacheName = cache.getName();
+        synchronized (cacheName.intern()) {
+            caches.put(cacheName, cache);
+        }
     }
 }
