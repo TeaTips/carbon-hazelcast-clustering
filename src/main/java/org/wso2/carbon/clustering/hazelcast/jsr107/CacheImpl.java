@@ -126,6 +126,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         }
         cacheStatistics = new CacheStatisticsImpl();
         registerMBean();
+        CacheManagerFactoryImpl.addCacheForMonitoring(this);
         status = Status.STARTED;
     }
 
@@ -140,7 +141,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     private void registerMBean() {
-
         String serverPackage = "org.wso2.carbon";
         try {
             String objectName = serverPackage + ":type=Cache,tenant=" + ownerTenantDomain +
@@ -627,6 +627,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
             log.error("Cannot unregister CacheMXBean", e);
         }
         status = Status.STOPPED;
+        cacheManager.removeCache(cacheName);
     }
 
     @Override
@@ -637,7 +638,11 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     public void expire(K key) {
         checkAccess(ownerTenantDomain, ownerTenantId);
-        CacheEntry entry = getMap().remove(key);
+        Map<K, CacheEntry<K, V>> map = getMap();
+        CacheEntry entry = map.remove(key);
+        if(map.isEmpty()){
+            cacheManager.removeCache(cacheName);
+        }
         notifyCacheEntryExpired(key, (V) entry.getValue());
     }
 
@@ -646,6 +651,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         map.remove(key);
+        if(map.isEmpty()){
+            cacheManager.removeCache(cacheName);
+        }
     }
 
     public void setCacheConfiguration(CacheConfigurationImpl cacheConfiguration) {
@@ -688,6 +696,32 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     boolean isIdle() {
         long timeDiff = System.currentTimeMillis() - lastAccessed;
         return getMap().isEmpty() && (timeDiff >= MAX_CACHE_IDLE_TIME_MILLIS);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CacheImpl cache = (CacheImpl) o;
+
+        if (ownerTenantId != cache.ownerTenantId) return false;
+        if (cacheManager != null ? !cacheManager.equals(cache.cacheManager) : cache.cacheManager != null)
+            return false;
+        if (cacheName != null ? !cacheName.equals(cache.cacheName) : cache.cacheName != null)
+            return false;
+        if (ownerTenantDomain != null ? !ownerTenantDomain.equals(cache.ownerTenantDomain) : cache.ownerTenantDomain != null)
+            return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = cacheName != null ? cacheName.hashCode() : 0;
+        result = 31 * result + (cacheManager != null ? cacheManager.hashCode() : 0);
+        result = 31 * result + (ownerTenantDomain != null ? ownerTenantDomain.hashCode() : 0);
+        result = 31 * result + ownerTenantId;
+        return result;
     }
 
     /**

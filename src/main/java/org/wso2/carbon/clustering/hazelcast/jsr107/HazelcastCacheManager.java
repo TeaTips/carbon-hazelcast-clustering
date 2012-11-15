@@ -46,8 +46,10 @@ public class HazelcastCacheManager implements CacheManager {
     private String ownerTenantDomain;
     private int ownerTenantId;
     private long lastAccessed = System.currentTimeMillis();
+    private CacheManagerFactoryImpl cacheManagerFactory;
 
-    public HazelcastCacheManager(String name) {
+    public HazelcastCacheManager(String name, CacheManagerFactoryImpl cacheManagerFactory) {
+        this.cacheManagerFactory = cacheManagerFactory;
         CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
         if (carbonContext == null) {
             throw new IllegalStateException("CarbonContext cannot be null");
@@ -153,7 +155,9 @@ public class HazelcastCacheManager implements CacheManager {
         if (oldCache != null) {
             oldCache.stop();
         }
-
+        if(caches.isEmpty()){
+            cacheManagerFactory.removeCacheManager(this, ownerTenantDomain);
+        }
         return oldCache != null;
     }
 
@@ -204,5 +208,28 @@ public class HazelcastCacheManager implements CacheManager {
     boolean isIdle() {
         long timeDiff = System.currentTimeMillis() - lastAccessed;
         return caches.isEmpty() && (timeDiff >= MAX_IDLE_TIME_MILLIS);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        HazelcastCacheManager that = (HazelcastCacheManager) o;
+
+        if (ownerTenantId != that.ownerTenantId) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (ownerTenantDomain != null ? !ownerTenantDomain.equals(that.ownerTenantDomain) : that.ownerTenantDomain != null)
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (ownerTenantDomain != null ? ownerTenantDomain.hashCode() : 0);
+        result = 31 * result + ownerTenantId;
+        return result;
     }
 }

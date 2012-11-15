@@ -17,12 +17,10 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
-import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
-
+import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.CacheManagerFactory;
 import javax.cache.CachingShutdownException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -34,9 +32,15 @@ import java.util.concurrent.TimeUnit;
  */
 public class CacheManagerFactoryImpl implements CacheManagerFactory {
 
+    private static CacheCleanupTask cacheCleanupTask = new CacheCleanupTask();
+
     static{
         ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10);
-        cacheExpiryScheduler.scheduleWithFixedDelay(new CacheCleanupTask(), 0, 30, TimeUnit.SECONDS);
+        cacheExpiryScheduler.scheduleWithFixedDelay(cacheCleanupTask, 0, 30, TimeUnit.SECONDS);
+    }
+
+    static void addCacheForMonitoring(Cache cache){
+        cacheCleanupTask.addCacheForMonitoring(cache);
     }
 
     /**
@@ -45,28 +49,22 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
     private Map<String, Map<String, CacheManager>> globalCacheManagerMap =
             new ConcurrentHashMap<String, Map<String, CacheManager>>();
 
-    public Map<String, Map<String, CacheManager>> getGlobalCacheManagerMap(){
-        Util.checkAccess(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME,
-                         MultitenantConstants.SUPER_TENANT_ID);
-        return Collections.unmodifiableMap(globalCacheManagerMap);
-    }
-
     @Override
-    public CacheManager getCacheManager(String name) {
+    public CacheManager getCacheManager(String cacheManagerName) {
         String tenantDomain = Util.getTenantDomain();
         CacheManager cacheManager;
-        synchronized ((tenantDomain + "_$_#" + name).intern()) {
+        synchronized ((tenantDomain + "_$_#" + cacheManagerName).intern()) {
             Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
             if(cacheManagers == null){
                 cacheManagers = new ConcurrentHashMap<String, CacheManager>();
                 globalCacheManagerMap.put(tenantDomain, cacheManagers);
-                cacheManager = new HazelcastCacheManager(name);
-                cacheManagers.put(name, cacheManager);
+                cacheManager = new HazelcastCacheManager(cacheManagerName, this);
+                cacheManagers.put(cacheManagerName, cacheManager);
             } else {
-                cacheManager = cacheManagers.get(name);
+                cacheManager = cacheManagers.get(cacheManagerName);
                 if (cacheManager == null) {
-                    cacheManager = new HazelcastCacheManager(name);
-                    cacheManagers.put(name, cacheManager);
+                    cacheManager = new HazelcastCacheManager(cacheManagerName, this);
+                    cacheManagers.put(cacheManagerName, cacheManager);
                 }
             }
         }
@@ -101,7 +99,7 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
     public boolean close(ClassLoader classLoader, String name) throws CachingShutdownException {
         String tenantDomain = Util.getTenantDomain();
         Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
-        CacheManager cacheManager = null;
+        CacheManager cacheManager;
         if (cacheManagers != null) {
             cacheManager = cacheManagers.get(name);
             cacheManager.shutdown();
@@ -110,9 +108,10 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
         return false;
     }
 
-    public void removeCacheManager(String tenantDomain) {
-        Util.checkAccess(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME,
-                         MultitenantConstants.SUPER_TENANT_ID);
-        globalCacheManagerMap.remove(tenantDomain);
+    public void removeCacheManager(HazelcastCacheManager cacheManager, String tenantDomain) {
+        Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
+        if(cacheManagers != null){
+            cacheManagers.remove(cacheManager.getName());
+        }
     }
 }
