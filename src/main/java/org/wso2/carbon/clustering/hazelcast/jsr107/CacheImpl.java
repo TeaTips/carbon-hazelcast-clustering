@@ -88,7 +88,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private Status status;
     private CacheStatisticsImpl cacheStatistics;
     private ObjectName cacheMXBeanObjName;
-    private CacheMXBeanImpl cacheMXBean;
     private final ExecutorService cacheLoadExecService = Executors.newFixedThreadPool(CACHE_LOADER_THREADS);
 
     private String ownerTenantDomain;
@@ -126,8 +125,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
             localCache = new ConcurrentHashMap<K, CacheEntry<K, V>>();
         }
         cacheStatistics = new CacheStatisticsImpl();
-        this.cacheMXBean = new CacheMXBeanImpl(this, ownerTenantDomain, ownerTenantId);
-        registerMBean(cacheMXBean, ownerTenantDomain);
+        registerMBean();
         status = Status.STARTED;
     }
 
@@ -141,22 +139,22 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         return mserver;
     }
 
-    private void registerMBean(Object mbeanInstance, String tenantDomain) {
+    private void registerMBean() {
+
         String serverPackage = "org.wso2.carbon";
         try {
-            String objectName = serverPackage + ":type=Cache,tenant=" + tenantDomain +
+            String objectName = serverPackage + ":type=Cache,tenant=" + ownerTenantDomain +
                                 ",manager=" + cacheManager.getName() + ",name=" + cacheName;
             MBeanServer mserver = getMBeanServer();
+            cacheMXBeanObjName = new ObjectName(objectName);
             Set set = mserver.queryNames(new ObjectName(objectName), null);
             if (set.isEmpty()) {
-                cacheMXBeanObjName = new ObjectName(objectName);
-                mserver.registerMBean(mbeanInstance, cacheMXBeanObjName);
-            } else {
-                log.debug("MBean " + objectName + " already exists");
-                throw new Exception("MBean " + objectName + " already exists");
+                CacheMXBeanImpl cacheMXBean =
+                        new CacheMXBeanImpl(this, ownerTenantDomain, ownerTenantId);
+                mserver.registerMBean(cacheMXBean, cacheMXBeanObjName);
             }
         } catch (Exception e) {
-            String msg = "Could not register " + mbeanInstance.getClass() + " MBean";
+            String msg = "Could not register CacheMXBeanImpl MBean";
             log.error(msg, e);
             throw new RuntimeException(msg, e);
         }
@@ -396,7 +394,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
-        CacheEntry entry = getMap().remove(key);
+        CacheEntry entry = getMap().remove((K) key);
         boolean removed = entry != null;
         if (removed) {
             notifyCacheEntryRemoved((K) key, (V) entry.getValue());
@@ -596,8 +594,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public CacheMXBean getMBean() {
-        lastAccessed = System.currentTimeMillis();
-        return cacheMXBean;
+        throw new UnsupportedOperationException("getMBean is an ambiguous method which is not supported");
     }
 
     @Override
@@ -625,8 +622,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         MBeanServer mserver = getMBeanServer();
         try {
             mserver.unregisterMBean(cacheMXBeanObjName);
-        } catch (InstanceNotFoundException e) {
-            log.error("Cannot unregister CacheMXBean", e);
+        } catch (InstanceNotFoundException ignored) {
         } catch (MBeanRegistrationException e) {
             log.error("Cannot unregister CacheMXBean", e);
         }
@@ -638,11 +634,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         checkAccess(ownerTenantDomain, ownerTenantId);
         return status;
     }
-
-    /*public boolean isEmpty() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
-        return getMap().isEmpty();
-    }*/
 
     public void expire(K key) {
         checkAccess(ownerTenantDomain, ownerTenantId);
