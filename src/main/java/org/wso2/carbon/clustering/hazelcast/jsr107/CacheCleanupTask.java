@@ -19,11 +19,9 @@ package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.context.PrivilegedCarbonContext;
+import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
 
-import javax.cache.Cache;
-import javax.cache.CacheConfiguration;
-import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,10 +32,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class CacheCleanupTask implements Runnable {
     private static final Log log = LogFactory.getLog(CacheCleanupTask.class);
-    private List<Cache> caches = new CopyOnWriteArrayList<Cache>();
+    private List<CacheImpl> caches = new CopyOnWriteArrayList<CacheImpl>();
 
-    public void addCacheForMonitoring(Cache cache) {
+    public void addCacheForMonitoring(CacheImpl cache) {
         caches.add(cache);
+    }
+
+    public void removeCacheFromMonitoring(CacheImpl cache) {
+        caches.remove(cache);
     }
 
     @Override
@@ -50,45 +52,18 @@ public class CacheCleanupTask implements Runnable {
         // Get all the caches
         // Get the configurations from the caches
         // Check the timeout policy and clear out old values
-        for (Cache cache : caches) {
-            checkCacheExpiry(cache);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private CacheImpl checkCacheExpiry(Cache<?, ?> cache) {
-        CacheConfiguration cacheConfiguration = cache.getConfiguration();
-
-        CacheConfiguration.Duration modifiedExpiry =
-                cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED);
-        long modifiedExpiryDuration =
-                modifiedExpiry.getTimeUnit().toMillis(modifiedExpiry.getDurationAmount());
-
-        CacheConfiguration.Duration accessedExpiry =
-                cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED);
-        long accessedExpiryDuration =
-                accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
-
-        CacheImpl cacheImpl = (CacheImpl) cache;
-        Collection<CacheEntry> cacheEntries = cacheImpl.getAll();
-        for (CacheEntry entry : cacheEntries) { // All Cache entries in a Cache
-            long lastAccessed = entry.getLastAccessed();
-            long lastModified = entry.getLastModified();
-            long now = System.currentTimeMillis();
-
-            if (log.isDebugEnabled()) {
-                log.debug("Cache:" + cache.getName() + ", entry:" + entry.getKey() + ", lastAccessed: " +
-                          new Date(lastAccessed) + ", lastModified: " + new Date(lastModified));
+        try {
+            PrivilegedCarbonContext.startTenantFlow();
+            PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
+            cc.setTenantId(MultitenantConstants.SUPER_TENANT_ID);
+            cc.setTenantDomain(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME);
+            for (CacheImpl cache : caches) {
+                cache.runCacheExpiry();
             }
-            if (now - lastAccessed >= accessedExpiryDuration ||
-                now - lastModified >= modifiedExpiryDuration) {
-                cacheImpl.expire(entry.getKey());
-                caches.remove(cache);
-                if (log.isDebugEnabled()) {
-                    log.debug("Expired: Cache:" + cache.getName() + ", entry:" + entry.getKey());
-                }
-            }
+        } catch (Throwable e) {
+            log.error("Error occurred while running CacheCleanupTask", e);
+        } finally {
+            PrivilegedCarbonContext.endTenantFlow();
         }
-        return cacheImpl;
     }
 }

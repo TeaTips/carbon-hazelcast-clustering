@@ -29,11 +29,11 @@ public final class Util {
         CarbonContext carbonContext = getCarbonContext();
         String callerTenantDomain = carbonContext.getTenantDomain();
         if (callerTenantDomain == null) {
-            throw new IllegalStateException("Tenant domain cannot be " + ownerTenantDomain);
+            throw new IllegalStateException("Caller tenant domain cannot be null");
         }
         int callerTenantId = carbonContext.getTenantId();
         if (callerTenantId == MultitenantConstants.INVALID_TENANT_ID) {
-            throw new IllegalStateException("Tenant ID cannot be " + ownerTenantId);
+            throw new IllegalStateException("Caller Tenant ID cannot be " + MultitenantConstants.INVALID_TENANT_ID);
         }
 
         if (callerTenantDomain.equals(MultitenantConstants.SUPER_TENANT_DOMAIN_NAME) &&

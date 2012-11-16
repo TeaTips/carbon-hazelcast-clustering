@@ -236,4 +236,22 @@ public class CachingTestCase {
         }
         assertNotNull(cache.get("key1"));
     }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testCacheExpiry(){
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testCacheExpiry-manager");
+        String cacheName = "testCacheExpiry";
+        Cache<String, Integer> cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
+                setExpiry(CacheConfiguration.ExpiryType.MODIFIED, new CacheConfiguration.Duration(TimeUnit.SECONDS, 2)).
+                setStoreByValue(false).build();
+        int value = 9876;
+        cache.put(key, value);
+        assertEquals(cache.get(key).intValue(), value);
+        try {
+            Thread.sleep(60000);
+        } catch (InterruptedException ignored) {
+        }
+        assertNull(cache.get(key));
+    }
 }

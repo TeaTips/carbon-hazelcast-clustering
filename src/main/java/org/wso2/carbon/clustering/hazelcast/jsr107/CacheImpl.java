@@ -50,6 +50,7 @@ import javax.management.ObjectName;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -62,8 +63,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
-
-import static org.wso2.carbon.clustering.hazelcast.jsr107.Util.checkAccess;
 
 /**
  * TODO: class description
@@ -168,7 +167,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     @Override
     @SuppressWarnings("unchecked")
     public V get(K key) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -184,7 +183,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Map<K, V> getAll(Set<? extends K> keys) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> source = getMap();
@@ -196,14 +195,14 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     }
 
     public Collection<CacheEntry<K, V>> getAll() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         return Collections.unmodifiableCollection(getMap().values());
     }
 
     @Override
     public boolean containsKey(K key) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         return getMap().containsKey(key);
@@ -211,7 +210,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Future<V> load(K key) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         CacheLoader<K, ? extends V> cacheLoader = cacheConfiguration.getCacheLoader();
@@ -237,7 +236,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Future<Map<K, ? extends V>> loadAll(final Set<? extends K> keys) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         if (keys == null) {
@@ -262,7 +261,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public CacheStatistics getStatistics() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         return cacheStatistics;
@@ -270,7 +269,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void put(K key, V value) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -340,7 +339,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndPut(K key, V value) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         V oldValue = (V) getMap().get(key).getValue();
@@ -355,7 +354,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> destination = getMap();
@@ -377,7 +376,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean putIfAbsent(K key, V value) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -391,7 +390,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(Object key) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         CacheEntry entry = getMap().remove((K) key);
@@ -404,7 +403,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean remove(K key, V oldValue) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -418,7 +417,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndRemove(K key) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         CacheEntry entry = getMap().remove(key);
@@ -432,7 +431,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -446,7 +445,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean replace(K key, V value) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -460,7 +459,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public V getAndReplace(K key, V value) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -474,7 +473,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll(Set<? extends K> keys) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -486,7 +485,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void removeAll() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
@@ -499,7 +498,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public CacheConfiguration<K, V> getConfiguration() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         if (cacheConfiguration == null) {
             cacheConfiguration = getDefaultCacheConfiguration();
         }
@@ -516,14 +515,14 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public boolean registerCacheEntryListener(CacheEntryListener<? super K, ? super V> cacheEntryListener) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         lastAccessed = System.currentTimeMillis();
         return cacheEntryListeners.add(cacheEntryListener);
     }
 
     @Override
     public boolean unregisterCacheEntryListener(CacheEntryListener<?, ?> cacheEntryListener) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         lastAccessed = System.currentTimeMillis();
         return cacheEntryListeners.remove(cacheEntryListener);
     }
@@ -562,20 +561,20 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public String getName() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         return this.cacheName;
     }
 
     @Override
     public CacheManager getCacheManager() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         lastAccessed = System.currentTimeMillis();
         return cacheManager;
     }
 
     @Override
     public <T> T unwrap(Class<T> cls) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         lastAccessed = System.currentTimeMillis();
         if (cls.isAssignableFrom(this.getClass())) {
             return cls.cast(this);
@@ -587,7 +586,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Iterator<Entry<K, V>> iterator() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         lastAccessed = System.currentTimeMillis();
         return new CacheEntryIterator<K, V>(getMap().values().iterator());
     }
@@ -599,7 +598,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void start() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         lastAccessed = System.currentTimeMillis();
         if (status == Status.STARTED) {
             throw new IllegalStateException();
@@ -609,7 +608,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public void stop() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         getMap().clear();
@@ -632,32 +631,32 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     @Override
     public Status getStatus() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         return status;
     }
 
     public void expire(K key) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.remove(key);
-        if(map.isEmpty()){
+        if (isIdle()) {
             cacheManager.removeCache(cacheName);
         }
         notifyCacheEntryExpired(key, (V) entry.getValue());
     }
 
     public void evict(K key) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         map.remove(key);
-        if(map.isEmpty()){
+        if (map.isEmpty()) {
             cacheManager.removeCache(cacheName);
         }
     }
 
     public void setCacheConfiguration(CacheConfigurationImpl cacheConfiguration) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         this.cacheConfiguration = cacheConfiguration;
     }
 
@@ -693,7 +692,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         }
     }
 
-    boolean isIdle() {
+    private boolean isIdle() {
         long timeDiff = System.currentTimeMillis() - lastAccessed;
         return getMap().isEmpty() && (timeDiff >= MAX_CACHE_IDLE_TIME_MILLIS);
     }
@@ -722,6 +721,40 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         result = 31 * result + (ownerTenantDomain != null ? ownerTenantDomain.hashCode() : 0);
         result = 31 * result + ownerTenantId;
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    void runCacheExpiry() {
+        CacheConfiguration cacheConfiguration = getConfiguration();
+
+        CacheConfiguration.Duration modifiedExpiry =
+                cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED);
+        long modifiedExpiryDuration =
+                modifiedExpiry.getTimeUnit().toMillis(modifiedExpiry.getDurationAmount());
+
+        CacheConfiguration.Duration accessedExpiry =
+                cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED);
+        long accessedExpiryDuration =
+                accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
+
+        Collection<CacheEntry<K, V>> cacheEntries = getAll();
+        for (CacheEntry<K, V> entry : cacheEntries) { // All Cache entries in a Cache
+            long lastAccessed = entry.getLastAccessed();
+            long lastModified = entry.getLastModified();
+            long now = System.currentTimeMillis();
+
+            if (log.isDebugEnabled()) {
+                log.debug("Cache:" + cacheName + ", entry:" + entry.getKey() + ", lastAccessed: " +
+                          new Date(lastAccessed) + ", lastModified: " + new Date(lastModified));
+            }
+            if (now - lastAccessed >= accessedExpiryDuration ||
+                now - lastModified >= modifiedExpiryDuration) {
+                expire(entry.getKey());
+                if (log.isDebugEnabled()) {
+                    log.debug("Expired: Cache:" + cacheName + ", entry:" + entry.getKey());
+                }
+            }
+        }
     }
 
     /**

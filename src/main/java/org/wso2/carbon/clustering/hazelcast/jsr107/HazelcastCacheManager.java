@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static org.wso2.carbon.clustering.hazelcast.jsr107.Util.checkAccess;
 
 /**
  * TODO: class description
@@ -68,19 +67,19 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public String getName() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         return this.name;
     }
 
     @Override
     public Status getStatus() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         return status;
     }
 
     @Override
     public <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         lastAccessed = System.currentTimeMillis();
         if (caches.get(cacheName) != null) {
             throw new CacheException("Cache " + cacheName + " already exists");
@@ -101,7 +100,7 @@ public class HazelcastCacheManager implements CacheManager {
     @Override
     @SuppressWarnings("unchecked")
     public <K, V> Cache<K, V> getCache(String cacheName) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -128,7 +127,7 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public Iterable<Cache<?, ?>> getCaches() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -142,7 +141,7 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public boolean removeCache(String cacheName) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
@@ -150,11 +149,12 @@ public class HazelcastCacheManager implements CacheManager {
             throw new NullPointerException("Cache name cannot be null");
         }
         lastAccessed = System.currentTimeMillis();
-        Cache<?, ?> oldCache;
-        oldCache = caches.remove(cacheName);
+        CacheImpl<?, ?> oldCache;
+        oldCache = (CacheImpl<?, ?>) caches.remove(cacheName);
         if (oldCache != null) {
             oldCache.stop();
         }
+        cacheManagerFactory.removeCacheFromMonitoring(oldCache);
         if(caches.isEmpty()){
             cacheManagerFactory.removeCacheManager(this, ownerTenantDomain);
         }
@@ -163,19 +163,19 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public javax.transaction.UserTransaction getUserTransaction() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public boolean isSupported(OptionalFeature optionalFeature) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         return false;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void shutdown() {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         for (Cache<?, ?> cache : caches.values()) {
             try {
                 cache.stop();
@@ -188,7 +188,7 @@ public class HazelcastCacheManager implements CacheManager {
 
     @Override
     public <T> T unwrap(Class<T> cls) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         if (cls.isAssignableFrom(this.getClass())) {
             return cls.cast(this);
         }
@@ -198,7 +198,7 @@ public class HazelcastCacheManager implements CacheManager {
     }
 
     void addCache(CacheImpl cache) {
-        checkAccess(ownerTenantDomain, ownerTenantId);
+        Util.checkAccess(ownerTenantDomain, ownerTenantId);
         String cacheName = cache.getName();
         synchronized (cacheName.intern()) {
             caches.put(cacheName, cache);

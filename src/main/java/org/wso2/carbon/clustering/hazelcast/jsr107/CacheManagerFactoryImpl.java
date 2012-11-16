@@ -17,7 +17,6 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
-import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.CacheManagerFactory;
 import javax.cache.CachingShutdownException;
@@ -34,13 +33,17 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
 
     private static CacheCleanupTask cacheCleanupTask = new CacheCleanupTask();
 
-    static{
+    static {
         ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10);
-        cacheExpiryScheduler.scheduleWithFixedDelay(cacheCleanupTask, 0, 30, TimeUnit.SECONDS);
+        cacheExpiryScheduler.scheduleWithFixedDelay(cacheCleanupTask, 30, 30, TimeUnit.SECONDS);
     }
 
-    static void addCacheForMonitoring(Cache cache){
+    static void addCacheForMonitoring(CacheImpl cache) {
         cacheCleanupTask.addCacheForMonitoring(cache);
+    }
+
+    void removeCacheFromMonitoring(CacheImpl cache) {
+        cacheCleanupTask.removeCacheFromMonitoring(cache);
     }
 
     /**
@@ -55,7 +58,7 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
         CacheManager cacheManager;
         synchronized ((tenantDomain + "_$_#" + cacheManagerName).intern()) {
             Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
-            if(cacheManagers == null){
+            if (cacheManagers == null) {
                 cacheManagers = new ConcurrentHashMap<String, CacheManager>();
                 globalCacheManagerMap.put(tenantDomain, cacheManagers);
                 cacheManager = new HazelcastCacheManager(cacheManagerName, this);
@@ -81,7 +84,7 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
     public void close() throws CachingShutdownException {
         String tenantDomain = Util.getTenantDomain();
         Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
-        if(cacheManagers != null){
+        if (cacheManagers != null) {
             for (CacheManager cacheManager : cacheManagers.values()) {
                 cacheManager.shutdown();
             }
@@ -110,7 +113,7 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
 
     public void removeCacheManager(HazelcastCacheManager cacheManager, String tenantDomain) {
         Map<String, CacheManager> cacheManagers = globalCacheManagerMap.get(tenantDomain);
-        if(cacheManagers != null){
+        if (cacheManagers != null) {
             cacheManagers.remove(cacheManager.getName());
         }
     }
