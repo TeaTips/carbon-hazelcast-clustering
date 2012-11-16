@@ -75,6 +75,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private static final int CACHE_LOADER_THREADS = 2;
     private static final long MAX_CACHE_IDLE_TIME_MILLIS = 15 * 60 * 1000; // 15mins
     private static final long DEFAULT_CACHE_EXPIRY_MINS = 15;
+    private static final long DEFAULT_CACHE_EXPIRY_MILLIS = DEFAULT_CACHE_EXPIRY_MINS * 60 * 1000;
 
     private String cacheName;
     private CacheManager cacheManager;
@@ -730,11 +731,15 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         CacheConfiguration.Duration modifiedExpiry =
                 cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.MODIFIED);
         long modifiedExpiryDuration =
+                modifiedExpiry == null ?
+                DEFAULT_CACHE_EXPIRY_MILLIS :
                 modifiedExpiry.getTimeUnit().toMillis(modifiedExpiry.getDurationAmount());
 
         CacheConfiguration.Duration accessedExpiry =
                 cacheConfiguration.getExpiry(CacheConfiguration.ExpiryType.ACCESSED);
         long accessedExpiryDuration =
+                accessedExpiry == null ?
+                DEFAULT_CACHE_EXPIRY_MILLIS :
                 accessedExpiry.getTimeUnit().toMillis(accessedExpiry.getDurationAmount());
 
         Collection<CacheEntry<K, V>> cacheEntries = getAll();

@@ -243,15 +243,16 @@ public class CachingTestCase {
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testCacheExpiry-manager");
         String cacheName = "testCacheExpiry";
         Cache<String, Integer> cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
-                setExpiry(CacheConfiguration.ExpiryType.MODIFIED, new CacheConfiguration.Duration(TimeUnit.SECONDS, 2)).
+                setExpiry(CacheConfiguration.ExpiryType.MODIFIED, new CacheConfiguration.Duration(TimeUnit.SECONDS, 1)).
                 setStoreByValue(false).build();
         int value = 9876;
         cache.put(key, value);
         assertEquals(cache.get(key).intValue(), value);
         try {
-            Thread.sleep(60000);
+            Thread.sleep(2000);
         } catch (InterruptedException ignored) {
         }
+        ((CacheImpl)cache).runCacheExpiry();
         assertNull(cache.get(key));
     }
 }
