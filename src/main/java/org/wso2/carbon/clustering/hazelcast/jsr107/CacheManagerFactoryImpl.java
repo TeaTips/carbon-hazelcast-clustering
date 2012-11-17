@@ -21,9 +21,11 @@ import javax.cache.CacheManager;
 import javax.cache.CacheManagerFactory;
 import javax.cache.CachingShutdownException;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,9 +34,16 @@ import java.util.concurrent.TimeUnit;
 public class CacheManagerFactoryImpl implements CacheManagerFactory {
 
     private static CacheCleanupTask cacheCleanupTask = new CacheCleanupTask();
-
+    private static Random randomGenerator = new Random();
     static {
-        ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10);
+        ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+                Thread th = new Thread(runnable);
+                th.setName("CacheExpirySchedulerThread-" + randomGenerator.nextInt(100));
+                return th;
+            }
+        });
         cacheExpiryScheduler.scheduleWithFixedDelay(cacheCleanupTask, 30, 30, TimeUnit.SECONDS);
     }
 
