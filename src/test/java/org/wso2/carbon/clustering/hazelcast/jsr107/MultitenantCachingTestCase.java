@@ -150,7 +150,7 @@ public class MultitenantCachingTestCase {
         String key2 = "testCreateCacheWithSameNameByTwoTenants-1234";
         String cacheName = "sampleCache";
 
-        // Tenant wso2.com
+        // Tenant apple.com
         try {
             PrivilegedCarbonContext.startTenantFlow();
             PrivilegedCarbonContext cc = PrivilegedCarbonContext.getThreadLocalCarbonContext();
