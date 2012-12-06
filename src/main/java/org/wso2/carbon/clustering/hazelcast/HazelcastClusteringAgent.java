@@ -19,6 +19,7 @@ package org.wso2.carbon.clustering.hazelcast;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.GroupConfig;
+import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -56,6 +57,7 @@ import java.util.Set;
 /**
  * This is the main ClusteringAgent class which is based on Hazelcast
  */
+@SuppressWarnings("unused")
 public class HazelcastClusteringAgent extends ParameterAdapter implements ClusteringAgent {
     private static final Log log = LogFactory.getLog(HazelcastClusteringAgent.class);
     public static final String DEFAULT_SUB_DOMAIN = "__$default";
@@ -133,6 +135,9 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
         }
 
         configureMembershipScheme(nwConfig);
+        MapConfig mapConfig = new MapConfig("foo");
+        mapConfig.setEvictionPolicy("LRU");
+        primaryHazelcastConfig.addMapConfig(mapConfig);
 
         if (clusterManagementMode) {
             for (Map.Entry<String, Map<String, GroupManagementAgent>> entry : groupManagementAgents.entrySet()) {
