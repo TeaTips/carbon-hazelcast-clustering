@@ -97,7 +97,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private long lastAccessed = System.currentTimeMillis();
 
     private long capacity = Long.MAX_VALUE;
-    private EvictionAlgorithm evictionAlgorithm;
+    private EvictionAlgorithm evictionAlgorithm = CachingConstants.DEFAULT_EVICTION_ALGORITHM;
 
     public CacheImpl(String cacheName, CacheManager cacheManager) {
         CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
