@@ -277,9 +277,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public void put(K key, V value) {
         Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
-
-        // TODO: see whether cache eviction is needed
-
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
         if (map.size() >= capacity) {
@@ -672,9 +669,6 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         checkStatusStarted();
         Map<K, CacheEntry<K, V>> map = getMap();
         map.remove(key);
-        if (map.isEmpty()) {
-            cacheManager.removeCache(cacheName);
-        }
     }
 
     public void setCacheConfiguration(CacheConfigurationImpl cacheConfiguration) {
@@ -684,6 +678,10 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
     public void setCapacity(long capacity) {
         this.capacity = capacity;
+    }
+
+    public void setEvictionAlgorithm(EvictionAlgorithm evictionAlgorithm) {
+        this.evictionAlgorithm = evictionAlgorithm;
     }
 
     private static final class CacheEntryIterator<K, V> implements Iterator<Entry<K, V>> {

@@ -33,7 +33,7 @@ public class MostRecentlyUsedEvictionAlgorithm implements EvictionAlgorithm {
             CacheEntry cacheEntry = (CacheEntry) iter.next();
             if (mruCacheEntry == null) {
                 mruCacheEntry = cacheEntry;
-            } else if (mruCacheEntry.getLastAccessed() > cacheEntry.getLastAccessed()) {
+            } else if (mruCacheEntry.getLastAccessed() < cacheEntry.getLastAccessed()) {
                 mruCacheEntry = cacheEntry;
             }
         }

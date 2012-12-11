@@ -18,6 +18,7 @@
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
 import org.testng.annotations.Test;
+import org.wso2.carbon.clustering.hazelcast.jsr107.eviction.LeastRecentlyUsedEvictionAlgorithm;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 
 import javax.cache.Cache;
@@ -239,7 +240,7 @@ public class CachingTestCase {
 
     @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
           description = "")
-    public void testCacheExpiry(){
+    public void testCacheExpiry() {
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testCacheExpiry-manager");
         String cacheName = "testCacheExpiry";
         Cache<String, Integer> cache = cacheManager.<String, Integer>createCacheBuilder(cacheName).
@@ -252,7 +253,50 @@ public class CachingTestCase {
             Thread.sleep(2000);
         } catch (InterruptedException ignored) {
         }
-        ((CacheImpl)cache).runCacheExpiry();
+        ((CacheImpl) cache).runCacheExpiry();
         assertNull(cache.get(key));
+    }
+
+    public void testMRUCacheEviction() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testMRUCacheEviction-manager");
+        String cacheName = "testMRUCacheEviction";
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
+
+        int value = 9876;
+        cache.put(key, value);
+        assertEquals(cache.get(key).intValue(), value);
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testLRUCacheEviction() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testLRUCacheEviction-manager");
+        String cacheName = "testLRUCacheEviction";
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
+
+        ((CacheImpl) cache).setCapacity(2);
+        ((CacheImpl) cache).setEvictionAlgorithm(new LeastRecentlyUsedEvictionAlgorithm());
+
+        String key1 = "key1";
+        String key2 = "key2";
+        String key3 = "key3";
+        int value1 = 9876;
+        int value2 = 1234;
+        int value3 = 5678;
+        cache.put(key1, value1);
+        assertEquals(cache.get(key1).intValue(), value1);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+        cache.put(key2, value2);
+        assertEquals(cache.get(key2).intValue(), value2);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+        cache.put(key3, value3);  // Now key 1 should have been evicted
+        assertEquals(cache.get(key3).intValue(), value3);
+        assertNull(cache.get(key1));
     }
 }
