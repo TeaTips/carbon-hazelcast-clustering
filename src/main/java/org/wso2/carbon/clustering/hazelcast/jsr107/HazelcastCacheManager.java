@@ -37,14 +37,12 @@ import java.util.regex.Pattern;
  * TODO: class description
  */
 public class HazelcastCacheManager implements CacheManager {
-    private static final long MAX_IDLE_TIME_MILLIS = 15 * 60 * 1000; // 15mins
     private Map<String, Cache<?, ?>> caches = new ConcurrentHashMap<String, Cache<?, ?>>();
     private volatile Status status;
     private String name;
 
     private String ownerTenantDomain;
     private int ownerTenantId;
-    private long lastAccessed = System.currentTimeMillis();
     private CacheManagerFactoryImpl cacheManagerFactory;
 
     public HazelcastCacheManager(String name, CacheManagerFactoryImpl cacheManagerFactory) {
@@ -84,7 +82,6 @@ public class HazelcastCacheManager implements CacheManager {
     @Override
     public <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName) {
         Util.checkAccess(ownerTenantDomain, ownerTenantId);
-        lastAccessed = System.currentTimeMillis();
         if (caches.get(cacheName) != null) {
             throw new CacheException("Cache " + cacheName + " already exists");
         }
@@ -108,7 +105,6 @@ public class HazelcastCacheManager implements CacheManager {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        lastAccessed = System.currentTimeMillis();
         Cache<K, V> cache;
         synchronized (cacheName.intern()) {
             cache = (Cache<K, V>) caches.get(cacheName);
@@ -135,7 +131,6 @@ public class HazelcastCacheManager implements CacheManager {
         if (status != Status.STARTED) {
             throw new IllegalStateException();
         }
-        lastAccessed = System.currentTimeMillis();
         HashSet<Cache<?, ?>> set = new HashSet<Cache<?, ?>>();
         for (Cache<?, ?> cache : caches.values()) {
             set.add(cache);
@@ -152,7 +147,6 @@ public class HazelcastCacheManager implements CacheManager {
         if (cacheName == null) {
             throw new NullPointerException("Cache name cannot be null");
         }
-        lastAccessed = System.currentTimeMillis();
         CacheImpl<?, ?> oldCache;
         oldCache = (CacheImpl<?, ?>) caches.remove(cacheName);
         if (oldCache != null) {
@@ -207,11 +201,6 @@ public class HazelcastCacheManager implements CacheManager {
         synchronized (cacheName.intern()) {
             caches.put(cacheName, cache);
         }
-    }
-
-    boolean isIdle() {
-        long timeDiff = System.currentTimeMillis() - lastAccessed;
-        return caches.isEmpty() && (timeDiff >= MAX_IDLE_TIME_MILLIS);
     }
 
     @Override

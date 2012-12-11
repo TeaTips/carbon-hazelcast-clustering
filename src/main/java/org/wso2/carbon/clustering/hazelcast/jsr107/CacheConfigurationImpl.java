@@ -75,14 +75,6 @@ public final class CacheConfigurationImpl implements CacheConfiguration {
     public CacheConfigurationImpl() {
     }
 
-    /**
-     * Constructor
-     *
-     * @param writeThrough
-     * @param readThrough
-     * @param statisticsEnabled
-     * @param timeToLive
-     */
     public CacheConfigurationImpl(boolean readThrough, boolean writeThrough,
                                   boolean storeByValue, boolean statisticsEnabled,
                                   IsolationLevel isolationLevel, Mode transactionMode,

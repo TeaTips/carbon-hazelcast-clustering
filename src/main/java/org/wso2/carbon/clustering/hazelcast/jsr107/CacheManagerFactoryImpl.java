@@ -37,14 +37,16 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
     private static Random randomGenerator = new Random();
 
     static {
-        ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10, new ThreadFactory() {
+        ThreadFactory threadFactory = new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
                 Thread th = new Thread(runnable);
                 th.setName("CacheExpirySchedulerThread-" + randomGenerator.nextInt(100));
                 return th;
             }
-        });
+        };
+        ScheduledExecutorService cacheExpiryScheduler =
+                Executors.newScheduledThreadPool(10, threadFactory);
         cacheExpiryScheduler.scheduleWithFixedDelay(cacheCleanupTask, 30, 30, TimeUnit.SECONDS);
     }
 

@@ -38,8 +38,8 @@ public class CacheMXBeanImpl implements CacheMXBean {
      * Constructor
      *
      * @param cache             the cache
-     * @param ownerTenantDomain
-     * @param ownerTenantId
+     * @param ownerTenantDomain ownerTenantDomain
+     * @param ownerTenantId     ownerTenantId
      */
     public CacheMXBeanImpl(Cache cache, String ownerTenantDomain, int ownerTenantId) {
         this.cache = cache;

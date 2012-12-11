@@ -195,7 +195,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         Map<K, CacheEntry<K, V>> source = getMap();
         Map<K, V> destination = new HashMap<K, V>(keys.size());
         for (K key : keys) {
-            destination.put(key, (V) source.get(key).getValue());
+            destination.put(key, source.get(key).getValue());
         }
         return destination;
     }
@@ -355,7 +355,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         if (map.size() >= capacity) {
             EvictionUtil.evict(this, evictionAlgorithm);
         }
-        V oldValue = (V) map.get(key).getValue();
+        V oldValue = map.get(key).getValue();
         put(key, value);
         if (oldValue == null) {
             notifyCacheEntryCreated(key, value);
@@ -509,7 +509,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
         for (Map.Entry<K, CacheEntry<K, V>> entry : map.entrySet()) {
-            notifyCacheEntryRemoved(entry.getKey(), (V) entry.getValue().getValue());
+            notifyCacheEntryRemoved(entry.getKey(), entry.getValue().getValue());
         }
         map.clear();
         //TODO: Notify value removed
@@ -553,27 +553,27 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         return entryProcessor.process(new MutableEntry<K, V>() {
             @Override
             public boolean exists() {
-                return false;  //To change body of implemented methods use File | Settings | File Templates.
+                return false;  //TODO
             }
 
             @Override
             public void remove() {
-                //To change body of implemented methods use File | Settings | File Templates.
+                //TODO
             }
 
             @Override
             public void setValue(V value) {
-                //To change body of implemented methods use File | Settings | File Templates.
+                //TODO
             }
 
             @Override
             public K getKey() {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+                return null;  //TODO
             }
 
             @Override
             public V getValue() {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+                return null;  //TODO
             }
         });  //TODO change body of implemented methods use File | Settings | File Templates.
     }

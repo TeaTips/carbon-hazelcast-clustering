@@ -44,7 +44,7 @@ public class CacheStatisticsImpl implements CacheStatistics {
 
     @Override
     public Date getStartAccumulationDate() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;  //TODO
     }
 
     @Override
@@ -54,7 +54,7 @@ public class CacheStatisticsImpl implements CacheStatistics {
 
     @Override
     public float getCacheHitPercentage() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;  //TODO
     }
 
     @Override
@@ -64,7 +64,7 @@ public class CacheStatisticsImpl implements CacheStatistics {
 
     @Override
     public float getCacheMissPercentage() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;  //TODO
     }
 
     @Override
@@ -79,7 +79,7 @@ public class CacheStatisticsImpl implements CacheStatistics {
 
     @Override
     public long getCacheRemovals() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;  //TODO
     }
 
     @Override
@@ -89,16 +89,16 @@ public class CacheStatisticsImpl implements CacheStatistics {
 
     @Override
     public float getAverageGetMillis() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;  //TODO
     }
 
     @Override
     public float getAveragePutMillis() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;  //TODO
     }
 
     @Override
     public float getAverageRemoveMillis() {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return 0;  //TODO
     }
 }
