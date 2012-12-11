@@ -21,7 +21,6 @@ import org.wso2.carbon.clustering.hazelcast.jsr107.CacheEntry;
 import org.wso2.carbon.clustering.hazelcast.jsr107.CacheImpl;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -29,14 +28,15 @@ import java.util.Random;
  */
 public class RandomEvictionAlgorithm implements EvictionAlgorithm {
 
+    @SuppressWarnings("unchecked")
     public void evict(CacheImpl cache) {
         CacheEntry lruCacheEntry = null;
         Collection all = cache.getAll();
         int evictionIndex = new Random().nextInt(all.size());
         int index = 0;
 
-        for (Iterator iter = all.iterator(); iter.hasNext(); ) {
-            CacheEntry cacheEntry = (CacheEntry) iter.next();
+        for (Object anAll : all) {
+            CacheEntry cacheEntry = (CacheEntry) anAll;
             if (index == evictionIndex) {
                 lruCacheEntry = cacheEntry;
                 break;
