@@ -27,12 +27,13 @@ import java.util.Random;
  * TODO: class description
  */
 public class RandomEvictionAlgorithm implements EvictionAlgorithm {
+    private static Random random = new Random();
 
     @SuppressWarnings("unchecked")
     public void evict(CacheImpl cache) {
         CacheEntry lruCacheEntry = null;
         Collection all = cache.getAll();
-        int evictionIndex = new Random().nextInt(all.size());
+        int evictionIndex = random.nextInt(all.size());
         int index = 0;
 
         for (Object anAll : all) {
