@@ -39,6 +39,7 @@ import org.apache.axis2.description.Parameter;
 import org.apache.axis2.util.Utils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.clustering.hazelcast.aws.AWSBasedMembershipScheme;
 import org.wso2.carbon.clustering.hazelcast.multicast.MulticastBasedMembershipScheme;
 import org.wso2.carbon.clustering.hazelcast.util.MemberUtils;
 import org.wso2.carbon.clustering.hazelcast.wka.WKABasedMembershipScheme;
@@ -68,7 +69,6 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
     private HazelcastMembershipScheme membershipScheme;
     private ConfigurationContext configurationContext;
     private ITopic<ClusteringMessage> clusteringMessageTopic;
-    private ITopic<ControlCommand> controlCommandTopic;
 
     /**
      * The mode in which this member operates such as "loadBalance" or "application"
@@ -155,7 +155,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
 
         clusteringMessageTopic = primaryHazelcastInstance.getTopic(HazelcastConstants.CLUSTERING_MESSAGE_TOPIC);
         clusteringMessageTopic.addMessageListener(new HazelcastClusterMessageListener(configurationContext));
-        controlCommandTopic = primaryHazelcastInstance.getTopic(HazelcastConstants.CONTROL_COMMAND_TOPIC);
+        ITopic<ControlCommand> controlCommandTopic = primaryHazelcastInstance.getTopic(HazelcastConstants.CONTROL_COMMAND_TOPIC);
         controlCommandTopic.addMessageListener(new HazelcastControlCommandListener(configurationContext));
 
         final Member localMember = primaryHazelcastInstance.getCluster().getLocalMember();
@@ -164,7 +164,7 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
                 MemberUtils.getLocalMember(primaryDomain, nwConfig.getPublicAddress(), nwConfig.getPort());
         log.info("Local member: [" + localMember.getUuid() + "] - " + carbonLocalMember);
         MemberUtils.getMembersMap(primaryHazelcastInstance, primaryDomain).put(localMember.getUuid(),
-                                                                        carbonLocalMember);
+                                                                               carbonLocalMember);
         membershipScheme.joinGroup();
         log.info("Cluster initialization completed");
 
@@ -238,6 +238,10 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
             membershipScheme = new MulticastBasedMembershipScheme(parameters, primaryDomain,
                                                                   nwConfig.getJoin().getMulticastConfig());
             membershipScheme.init();
+        } else if (scheme.equals(HazelcastConstants.AWS_MEMBERSHIP_SCHEME)) {
+            membershipScheme = new AWSBasedMembershipScheme(parameters, primaryDomain,
+                                                            nwConfig.getJoin().getAwsConfig());
+            membershipScheme.init();
         } else {
             String msg = "Invalid membership scheme '" + scheme +
                          "'. Supported schemes are multicast & wka";
@@ -260,10 +264,12 @@ public class HazelcastClusteringAgent extends ParameterAdapter implements Cluste
             mbrScheme = ((String) membershipSchemeParam.getValue()).trim();
         }
         if (!mbrScheme.equals(ClusteringConstants.MembershipScheme.MULTICAST_BASED) &&
-            !mbrScheme.equals(ClusteringConstants.MembershipScheme.WKA_BASED)) {
+            !mbrScheme.equals(ClusteringConstants.MembershipScheme.WKA_BASED) &&
+            !mbrScheme.equals(HazelcastConstants.AWS_MEMBERSHIP_SCHEME)) {
             String msg = "Invalid membership scheme '" + mbrScheme + "'. Supported schemes are " +
-                         ClusteringConstants.MembershipScheme.MULTICAST_BASED + " & " +
-                         ClusteringConstants.MembershipScheme.WKA_BASED;
+                         ClusteringConstants.MembershipScheme.MULTICAST_BASED + ", " +
+                         ClusteringConstants.MembershipScheme.WKA_BASED + " & " +
+                         HazelcastConstants.AWS_MEMBERSHIP_SCHEME;
             log.error(msg);
             throw new ClusteringFault(msg);
         }

@@ -94,6 +94,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private int ownerTenantId;
     private long lastAccessed = System.currentTimeMillis();
 
+    private int cacheSize;
+
     public CacheImpl(String cacheName, CacheManager cacheManager) {
         CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
         if (carbonContext == null) {
@@ -272,6 +274,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public void put(K key, V value) {
         Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
+
+        // TODO: see whether cache eviction is needed
+
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
         CacheEntry entry = map.get(key);

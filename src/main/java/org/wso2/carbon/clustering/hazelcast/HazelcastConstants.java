@@ -31,6 +31,8 @@ public final class HazelcastConstants {
     public static final String CONTROL_COMMAND_TOPIC = "$control.$command.$topic";
     public static final String GROUP_PASSWORD = "groupPassword";
 
+    public static final String AWS_MEMBERSHIP_SCHEME = "aws";
+
     private HazelcastConstants() {
     }
 }
