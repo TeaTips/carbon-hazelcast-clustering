@@ -17,12 +17,15 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107;
 
+import org.wso2.carbon.clustering.hazelcast.jsr107.eviction.LeastRecentlyUsedEvictionAlgorithm;
+
 /**
  * TODO: class description
  */
 public final class CachingConstants {
 
     public static final int DEFAULT_CACHE_SIZE = 1000;
+    public static final String DEFAULT_EVICTION_ALGORITHM = LeastRecentlyUsedEvictionAlgorithm.class.getName();
 
     private CachingConstants() {
     }

@@ -22,6 +22,8 @@ import com.hazelcast.core.IMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.clustering.hazelcast.HazelcastInstanceManager;
+import org.wso2.carbon.clustering.hazelcast.jsr107.eviction.EvictionAlgorithm;
+import org.wso2.carbon.clustering.hazelcast.jsr107.eviction.EvictionUtil;
 import org.wso2.carbon.context.CarbonContext;
 import org.wso2.carbon.context.PrivilegedCarbonContext;
 import org.wso2.carbon.utils.multitenancy.MultitenantConstants;
@@ -94,7 +96,8 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private int ownerTenantId;
     private long lastAccessed = System.currentTimeMillis();
 
-    private int cacheSize;
+    private long capacity = Long.MAX_VALUE;
+    private EvictionAlgorithm evictionAlgorithm;
 
     public CacheImpl(String cacheName, CacheManager cacheManager) {
         CarbonContext carbonContext = CarbonContext.getThreadLocalCarbonContext();
@@ -279,6 +282,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
 
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
+        if (map.size() >= capacity) {
+            EvictionUtil.evict(this, evictionAlgorithm);
+        }
         CacheEntry entry = map.get(key);
         V oldValue = entry != null ? (V) entry.getValue() : null;
         if (oldValue == null) {
@@ -348,7 +354,11 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         Util.checkAccess(ownerTenantDomain, ownerTenantId);
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
-        V oldValue = (V) getMap().get(key).getValue();
+        Map<K, CacheEntry<K, V>> map = getMap();
+        if (map.size() >= capacity) {
+            EvictionUtil.evict(this, evictionAlgorithm);
+        }
+        V oldValue = (V) map.get(key).getValue();
         put(key, value);
         if (oldValue == null) {
             notifyCacheEntryCreated(key, value);
@@ -372,6 +382,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
             }
             V value = entry.getValue();
             destination.put(key, new CacheEntry(key, value));
+            if (destination.size() >= capacity) {
+                EvictionUtil.evict(this, evictionAlgorithm);
+            }
             if (entryExists) {
                 notifyCacheEntryUpdated(key, value);
             } else {
@@ -386,6 +399,9 @@ public class CacheImpl<K, V> implements Cache<K, V> {
         checkStatusStarted();
         lastAccessed = System.currentTimeMillis();
         Map<K, CacheEntry<K, V>> map = getMap();
+        if (map.size() >= capacity) {
+            EvictionUtil.evict(this, evictionAlgorithm);
+        }
         if (!map.containsKey(key)) {
             map.put(key, new CacheEntry(key, value));
             notifyCacheEntryCreated(key, value);
@@ -664,6 +680,10 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     public void setCacheConfiguration(CacheConfigurationImpl cacheConfiguration) {
         Util.checkAccess(ownerTenantDomain, ownerTenantId);
         this.cacheConfiguration = cacheConfiguration;
+    }
+
+    public void setCapacity(long capacity) {
+        this.capacity = capacity;
     }
 
     private static final class CacheEntryIterator<K, V> implements Iterator<Entry<K, V>> {
