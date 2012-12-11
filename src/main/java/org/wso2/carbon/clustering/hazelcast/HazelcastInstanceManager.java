@@ -28,12 +28,12 @@ public class HazelcastInstanceManager {
     private static HazelcastInstanceManager instance = new HazelcastInstanceManager();
     private HazelcastInstance hazelcastInstance;
 
-    public static HazelcastInstanceManager getInstance(){
+    public static HazelcastInstanceManager getInstance() {
         return instance;
     }
 
-    public HazelcastInstance init(Config config){
-        if(hazelcastInstance != null){
+    public HazelcastInstance init(Config config) {
+        if (hazelcastInstance != null) {
             throw new IllegalStateException("HazelcastInstanceManager has already been initialized");
         }
         hazelcastInstance = Hazelcast.newHazelcastInstance(config);

@@ -24,30 +24,30 @@ import java.lang.annotation.Target;
  * "allDomains" cache name specified in the method level annotation.
  * <p><blockquote><pre>
  * package my.app;
- * 
+ * <p/>
  * &#64;CacheDefaults(cacheName="domainCache")
  * public class DomainDao {
  *   &#64;CacheResult
  *   public Domain getDomain(String domainId, int index) {
  *     ...
  *   }
- *   
+ * <p/>
  *   &#64;CacheRemoveEntry
  *   public void deleteDomain(String domainId, int index) {
  *     ...
  *   }
- *   
+ * <p/>
  *   &#64;CacheResult(cacheName="allDomains")
  *   public List&lt;Domain> getAllDomains() {
  *     ...
  *   }
  * }
  * </pre></blockquote></p>
- * 
+ *
  * @author Rick Hightower
  * @since 1.0
  */
-@Target({ ElementType.TYPE })
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CacheDefaults {
 
@@ -58,8 +58,7 @@ public @interface CacheDefaults {
      * <p/>
      * Applicable for {@link CacheResult}, {@link CachePut}, {@link CacheRemoveEntry}, and {@link CacheRemoveAll}
      */
-    @Nonbinding
-    String cacheName() default "";
+    @Nonbinding String cacheName() default "";
 
     /**
      * (Optional) The {@link CacheResolverFactory} used to find the {@link CacheResolver} to use at runtime.
@@ -68,21 +67,19 @@ public @interface CacheDefaults {
      * <p/>
      * Applicable for {@link CacheResult}, {@link CachePut}, {@link CacheRemoveEntry}, and {@link CacheRemoveAll}
      */
-    @Nonbinding
-    Class<? extends CacheResolverFactory> cacheResolverFactory() default CacheResolverFactory.class;
+    @Nonbinding Class<? extends CacheResolverFactory> cacheResolverFactory() default CacheResolverFactory.class;
 
     /**
      * (Optional) The {@link CacheKeyGenerator} to use to generate the {@link CacheKey} for interacting
      * with the specified Cache.
      * <p/>
-     * Defaults to a key generator that uses {@link java.util.Arrays#deepHashCode(Object[])} and 
+     * Defaults to a key generator that uses {@link java.util.Arrays#deepHashCode(Object[])} and
      * {@link java.util.Arrays#deepEquals(Object[], Object[])} with the array returned by
      * {@link CacheKeyInvocationContext#getKeyParameters()}
      * <p/>
      * Applicable for {@link CacheResult}, {@link CachePut}, and {@link CacheRemoveEntry}
-     * 
+     *
      * @see CacheKeyParam
      */
-    @Nonbinding
-    Class<? extends CacheKeyGenerator> cacheKeyGenerator() default CacheKeyGenerator.class;
+    @Nonbinding Class<? extends CacheKeyGenerator> cacheKeyGenerator() default CacheKeyGenerator.class;
 }

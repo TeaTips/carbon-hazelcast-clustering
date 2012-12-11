@@ -59,11 +59,12 @@ public final class Caching {
 
     /**
      * Get the singleton CacheManagerFactory
+     *
      * @return the cache manager factory
      * @throws IllegalStateException if no CachingProvider is found or if more than one CachingProvider is found
      */
     public static CacheManagerFactory getCacheManagerFactory() {
-      return ServiceFactoryHolder.INSTANCE.getCachingProvider().getCacheManagerFactory();
+        return ServiceFactoryHolder.INSTANCE.getCachingProvider().getCacheManagerFactory();
     }
 
     /**
@@ -151,7 +152,7 @@ public final class Caching {
      * </pre>
      *
      * @throws CachingShutdownException if any of the individual shutdowns failed
-     * @throws IllegalStateException if no CachingProvider is found or if more than one CachingProvider is found
+     * @throws IllegalStateException    if no CachingProvider is found or if more than one CachingProvider is found
      */
     public static void close() throws CachingShutdownException {
         getCacheManagerFactory().close();
@@ -165,7 +166,7 @@ public final class Caching {
      * @param classLoader the class loader for which managers will be shut down
      * @return true if found, false otherwise
      * @throws CachingShutdownException if any of the individual shutdowns failed
-     * @throws IllegalStateException if no CachingProvider is found or if more than one CachingProvider is found
+     * @throws IllegalStateException    if no CachingProvider is found or if more than one CachingProvider is found
      */
     public static boolean close(ClassLoader classLoader) throws CachingShutdownException {
         return getCacheManagerFactory().close(classLoader);
@@ -180,7 +181,7 @@ public final class Caching {
      * @param name        the name of the cache manager
      * @return true if found, false otherwise
      * @throws CachingShutdownException if any of the individual shutdowns failed
-     * @throws IllegalStateException if no CachingProvider is found or if more than one CachingProvider is found
+     * @throws IllegalStateException    if no CachingProvider is found or if more than one CachingProvider is found
      */
     public static boolean close(ClassLoader classLoader, String name) throws CachingShutdownException {
         return getCacheManagerFactory().close(classLoader, name);
@@ -196,7 +197,7 @@ public final class Caching {
     public static boolean isSupported(OptionalFeature optionalFeature) {
         return ServiceFactoryHolder.INSTANCE.getCachingProvider().isSupported(optionalFeature);
     }
-    
+
     /**
      * Indicates whether annotations are supported
      *
@@ -252,31 +253,37 @@ public final class Caching {
         //todo support multiple providers
         public CachingProvider getCachingProvider() {
             switch (cachingProviders.size()) {
-                case 0: throw new IllegalStateException("No CachingProviders found in classpath.");
-                case 1: return cachingProviders.get(0);
-                default: throw new IllegalStateException("Multiple CachingProviders found in classpath." +
-                        " There should only be one. CachingProviders found were: "
-                        + createListOfClassNames(cachingProviders));
+                case 0:
+                    throw new IllegalStateException("No CachingProviders found in classpath.");
+                case 1:
+                    return cachingProviders.get(0);
+                default:
+                    throw new IllegalStateException("Multiple CachingProviders found in classpath." +
+                                                    " There should only be one. CachingProviders found were: "
+                                                    + createListOfClassNames(cachingProviders));
             }
         }
 
         //todo support multiple providers
         public AnnotationProvider getAnnotationProvider() {
             switch (annotationProviders.size()) {
-                case 0: return null;
-                case 1: return annotationProviders.get(0);
-                default: throw new IllegalStateException("Multiple AnnotationProviders found in classpath." +
-                        " There should only be one. CachingProviders found were: "
-                        + createListOfClassNames(annotationProviders));
+                case 0:
+                    return null;
+                case 1:
+                    return annotationProviders.get(0);
+                default:
+                    throw new IllegalStateException("Multiple AnnotationProviders found in classpath." +
+                                                    " There should only be one. CachingProviders found were: "
+                                                    + createListOfClassNames(annotationProviders));
             }
         }
-        
+
         private static String createListOfClassNames(Collection<?> names) {
             if (names.isEmpty()) {
                 return "<none>";
             } else {
                 StringBuilder sb = new StringBuilder();
-                for (Iterator<?> it = names.iterator(); it.hasNext();) {
+                for (Iterator<?> it = names.iterator(); it.hasNext(); ) {
                     Object o = it.next();
                     sb.append(o.getClass().getName());
                     if (it.hasNext()) {

@@ -22,8 +22,8 @@ package javax.cache.annotation;
 import javax.cache.CacheException;
 
 /**
- * Thrown if an invalid cache annotation configuration is detected. 
- * 
+ * Thrown if an invalid cache annotation configuration is detected.
+ *
  * @author Eric Dalquist
  * @version $Revision$
  */
@@ -32,7 +32,8 @@ public class CacheAnnotationConfigurationException extends CacheException {
 
     /**
      * Constructs a new CacheAnnotationConfigurationException.
-     * @since  1.0
+     *
+     * @since 1.0
      */
     public CacheAnnotationConfigurationException() {
         super();
@@ -43,7 +44,7 @@ public class CacheAnnotationConfigurationException extends CacheException {
      *
      * @param message the detail message. The detail message is saved for
      *                later retrieval by the {@link #getMessage()} method.
-     * @since  1.0
+     * @since 1.0
      */
     public CacheAnnotationConfigurationException(String message) {
         super(message);
@@ -53,13 +54,13 @@ public class CacheAnnotationConfigurationException extends CacheException {
      * Constructs a CacheAnnotationConfigurationException with a message string, and
      * a base exception
      *
-     * @param message   the detail message. The detail message is saved for
-     *                  later retrieval by the {@link #getMessage()} method.
-     * @param  cause the cause (which is saved for later retrieval by the
-     *         {@link #getCause()} method).  (A <tt>null</tt> value is
-     *         permitted, and indicates that the cause is nonexistent or
-     *         unknown.)
-     * @since  1.0
+     * @param message the detail message. The detail message is saved for
+     *                later retrieval by the {@link #getMessage()} method.
+     * @param cause   the cause (which is saved for later retrieval by the
+     *                {@link #getCause()} method).  (A <tt>null</tt> value is
+     *                permitted, and indicates that the cause is nonexistent or
+     *                unknown.)
+     * @since 1.0
      */
     public CacheAnnotationConfigurationException(String message, Throwable cause) {
         super(message, cause);
@@ -72,11 +73,11 @@ public class CacheAnnotationConfigurationException extends CacheException {
      * <tt>cause</tt>).  This constructor is useful for runtime exceptions
      * that are little more than wrappers for other throwables.
      *
-     * @param  cause the cause (which is saved for later retrieval by the
-     *         {@link #getCause()} method).  (A <tt>null</tt> value is
-     *         permitted, and indicates that the cause is nonexistent or
-     *         unknown.)
-     * @since  1.0
+     * @param cause the cause (which is saved for later retrieval by the
+     *              {@link #getCause()} method).  (A <tt>null</tt> value is
+     *              permitted, and indicates that the cause is nonexistent or
+     *              unknown.)
+     * @since 1.0
      */
     public CacheAnnotationConfigurationException(Throwable cause) {
         super(cause);

@@ -19,14 +19,14 @@ import java.io.Serializable;
  * representation of the key.
  *
  * @author Eric Dalquist
- * @since 1.0
  * @see CacheKeyGenerator
+ * @since 1.0
  */
 public interface CacheKey extends Serializable {
 
     /**
      * The immutable hash code of the cache key.
-     * 
+     *
      * @return The hash code of the object
      * @see Object#hashCode()
      */

@@ -19,7 +19,6 @@ package org.wso2.carbon.clustering.hazelcast;
 
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import org.apache.axis2.clustering.ClusteringCommand;
 import org.apache.axis2.clustering.ClusteringFault;
 import org.apache.axis2.clustering.ClusteringMessage;
 import org.apache.axis2.context.ConfigurationContext;

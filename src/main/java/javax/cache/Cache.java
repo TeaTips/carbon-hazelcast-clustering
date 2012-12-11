@@ -62,7 +62,6 @@ import java.util.concurrent.Future;
  * then all subsequent operations on that key will block until that lock is released. The consequences are that operations performed by a
  * thread happen-before read or mutation operations performed by another thread, including threads in different Java Virtual Machines.
  *
- *
  * @param <K> the type of keys maintained by this cache
  * @param <V> the type of cached values
  * @author Greg Luck
@@ -76,7 +75,7 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
      * If the cache is configured read-through, and get would return null because the entry
      * is missing from the cache, the Cache's {@link CacheLoader} is called which will attempt
      * to load the entry.
-     *
+     * <p/>
      * <h1>Effects:</h1>
      * <ul>
      * <li>Expiry - updates {@link CacheConfiguration.ExpiryType#ACCESSED Access Time}.</li>
@@ -102,7 +101,6 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
      * to load the entry. This is done for each key in the collection for which this is the case.
      * If an entry cannot be loaded for a given key, the key will not be present in the returned Map.
      * <p/>
-     *
      *
      * @param keys The keys whose associated values are to be returned.
      * @return A map of entries that were found for the given keys. Keys not found in the cache are not in the returned map.
@@ -161,7 +159,6 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
      * <p/>
      * If a problem is encountered during the retrieving or loading of the object, an exception
      * must be propagated on {@link java.util.concurrent.Future#get()} as a {@link java.util.concurrent.ExecutionException}
-     *
      *
      * @param keys the keys
      * @return a Future which can be used to monitor execution
@@ -485,10 +482,10 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
      * processor. All operations performed by the processor will be done atomically
      * i.e. all The processor will perform the operations against
      *
-     * @param key the key to the entry
+     * @param key            the key to the entry
      * @param entryProcessor the processor which will process the entry
      * @return an object
-     * @throws NullPointerException if key or entryProcessor are null
+     * @throws NullPointerException  if key or entryProcessor are null
      * @throws IllegalStateException if the cache is not {@link Status#STARTED}
      * @see EntryProcessor
      */
@@ -528,8 +525,9 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
 
     /**
      * Get the MBean for this cache.
+     *
      * @return the MBean
-     * TODO: not sure this belongs here
+     *         TODO: not sure this belongs here
      */
     CacheMXBean getMBean();
 
@@ -555,6 +553,7 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
 
     /**
      * An accessor and mutator to the underlying Cache
+     *
      * @param <K>
      * @param <V>
      */
@@ -562,6 +561,7 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
 
         /**
          * Checks for the existence of the entry in the cache
+         *
          * @return
          */
         boolean exists();
@@ -569,7 +569,6 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
         /**
          * Removes the entry from the Cache
          * <p/>
-         *
          */
         void remove();
 
@@ -607,7 +606,6 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
      * V if {@link Cache.MutableEntry#getKey()} or {@link Cache.MutableEntry#getValue()}
      * is invoked.
      *
-     *
      * @param <K> the type of keys maintained by this cache
      * @param <V> the type of cached values
      * @author Greg Luck
@@ -618,6 +616,7 @@ public interface Cache<K, V> extends Iterable<Cache.Entry<K, V>>, CacheLifecycle
         /**
          * Process an entry. Exclusive read and write access to the entry is obtained to
          * the entry.
+         *
          * @param entry the entry
          * @return the result
          */

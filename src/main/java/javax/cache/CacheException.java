@@ -21,7 +21,8 @@ public class CacheException extends RuntimeException {
 
     /**
      * Constructs a new CacheException.
-     * @since  1.0
+     *
+     * @since 1.0
      */
     public CacheException() {
         super();
@@ -32,7 +33,7 @@ public class CacheException extends RuntimeException {
      *
      * @param message the detail message. The detail message is saved for
      *                later retrieval by the {@link #getMessage()} method.
-     * @since  1.0
+     * @since 1.0
      */
     public CacheException(String message) {
         super(message);
@@ -42,13 +43,13 @@ public class CacheException extends RuntimeException {
      * Constructs a CacheException with a message string, and
      * a base exception
      *
-     * @param message   the detail message. The detail message is saved for
-     *                  later retrieval by the {@link #getMessage()} method.
-     * @param  cause the cause (which is saved for later retrieval by the
-     *         {@link #getCause()} method).  (A <tt>null</tt> value is
-     *         permitted, and indicates that the cause is nonexistent or
-     *         unknown.)
-     * @since  1.0
+     * @param message the detail message. The detail message is saved for
+     *                later retrieval by the {@link #getMessage()} method.
+     * @param cause   the cause (which is saved for later retrieval by the
+     *                {@link #getCause()} method).  (A <tt>null</tt> value is
+     *                permitted, and indicates that the cause is nonexistent or
+     *                unknown.)
+     * @since 1.0
      */
     public CacheException(String message, Throwable cause) {
         super(message, cause);
@@ -61,11 +62,11 @@ public class CacheException extends RuntimeException {
      * <tt>cause</tt>).  This constructor is useful for runtime exceptions
      * that are little more than wrappers for other throwables.
      *
-     * @param  cause the cause (which is saved for later retrieval by the
-     *         {@link #getCause()} method).  (A <tt>null</tt> value is
-     *         permitted, and indicates that the cause is nonexistent or
-     *         unknown.)
-     * @since  1.0
+     * @param cause the cause (which is saved for later retrieval by the
+     *              {@link #getCause()} method).  (A <tt>null</tt> value is
+     *              permitted, and indicates that the cause is nonexistent or
+     *              unknown.)
+     * @since 1.0
      */
     public CacheException(Throwable cause) {
         super(cause);

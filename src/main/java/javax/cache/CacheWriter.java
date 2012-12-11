@@ -20,7 +20,6 @@ import java.util.Collection;
  * The entry passed into {@link #write(javax.cache.Cache.Entry)} is independent of the cache mapping for that key
  * meaning that if the value changes in the cache or is removed it does not change the said entry.
  *
- *
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  * @since 1.0

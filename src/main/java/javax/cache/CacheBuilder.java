@@ -15,7 +15,7 @@ import javax.cache.transaction.Mode;
  * A CacheBuilder is used for creating Caches.
  * A CacheBuilder is created by {@link CacheManager#createCacheBuilder(String)} and is associated with that
  * manager.
- *
+ * <p/>
  * Additional configuration methods may be available on a builder instance by casting to a concrete implementation.
  *
  * @param <K> the key type
@@ -34,10 +34,10 @@ public interface CacheBuilder<K, V> {
      *
      * @return a new instance of the named cache
      * @throws InvalidConfigurationException thrown if the configuration is invalid. Examples include if
-     * read through has been set to true but no cache loader is specified, or if no cache writer is specified but
-     * write through has been set.
+     *                                       read through has been set to true but no cache loader is specified, or if no cache writer is specified but
+     *                                       write through has been set.
+     * @throws CacheException                if a cache with that name already exists or there was an error adding the cache to the CacheManager
      * @see CacheManager#createCacheBuilder(String)
-     * @throws CacheException if a cache with that name already exists or there was an error adding the cache to the CacheManager
      */
     Cache<K, V> build();
 
@@ -73,7 +73,7 @@ public interface CacheBuilder<K, V> {
      *
      * @param storeByValue the value for storeByValue
      * @return the builder
-     * @throws IllegalStateException if the configuration can no longer be changed
+     * @throws IllegalStateException         if the configuration can no longer be changed
      * @throws InvalidConfigurationException if the cache does not support store by reference
      * @see CacheConfiguration#isStoreByValue()
      */
@@ -83,10 +83,10 @@ public interface CacheBuilder<K, V> {
      * Sets whether transaction are enabled for this cache.
      *
      * @param isolationLevel - the isolation level for this cache
-     * @param mode - the mode (Local or XA) for this cache
+     * @param mode           - the mode (Local or XA) for this cache
      * @return the builder
      * @throws IllegalArgumentException if the cache does not support transactions,
-     * or an attempt is made to set the isolation level to {@link IsolationLevel#NONE} or the mode to {@link Mode#NONE}.
+     *                                  or an attempt is made to set the isolation level to {@link IsolationLevel#NONE} or the mode to {@link Mode#NONE}.
      * @see CacheConfiguration#isTransactionEnabled()
      */
     CacheBuilder<K, V> setTransactionEnabled(IsolationLevel isolationLevel, Mode mode);
@@ -119,7 +119,7 @@ public interface CacheBuilder<K, V> {
     /**
      * Sets the cache expiration
      *
-     * @param type whether based on creation/modification or last access time
+     * @param type     whether based on creation/modification or last access time
      * @param duration the amount of time
      * @return the builder
      * @throws NullPointerException if size is duration

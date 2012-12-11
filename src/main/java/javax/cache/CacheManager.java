@@ -50,6 +50,7 @@ public interface CacheManager {
      * Returns the status of this CacheManager.
      * <p/>
      * Calls to this method will block while the state is changing.
+     *
      * @return one of {@link Status}
      */
     Status getStatus();
@@ -90,10 +91,10 @@ public interface CacheManager {
      *
      * @param cacheName the name of the cache to build. A cache name must consist of at least one non-whitespace character.
      * @return the CacheBuilder for the named cache
-     * @throws IllegalStateException if the CacheManager is not in {@link Status#STARTED} state.
-     * @throws CacheException        if a cache with that name already exists or there was an error adding the cache to the CacheManager
+     * @throws IllegalStateException    if the CacheManager is not in {@link Status#STARTED} state.
+     * @throws CacheException           if a cache with that name already exists or there was an error adding the cache to the CacheManager
      * @throws IllegalArgumentException if an illegal cache name is specified
-     * @throws NullPointerException  if the cache name is null
+     * @throws NullPointerException     if the cache name is null
      */
     <K, V> CacheBuilder<K, V> createCacheBuilder(String cacheName);
 
@@ -122,7 +123,7 @@ public interface CacheManager {
      * @param cacheName the cache name
      * @return true if the cache was removed
      * @throws IllegalStateException if the cache is not {@link Status#STARTED}
-     * @throws NullPointerException if cacheName is null
+     * @throws NullPointerException  if cacheName is null
      */
     boolean removeCache(String cacheName);
 
@@ -157,17 +158,18 @@ public interface CacheManager {
      * will return an empty collection.
      * <p/>
      * A given CacheManager instance cannot be restarted after it has been stopped. A new one must be created.
+     *
      * @throws IllegalStateException if an operation is performed on CacheManager while stopping or stopped.
      */
     void shutdown();
-    
+
     /**
      * Return an object of the specified type to allow access to the provider-specific API. If the provider's
      * implementation does not support the specified class, the {@link IllegalArgumentException} is thrown.
-     * 
+     *
      * @param cls the class of the object to be returned. This is normally either the
      *            underlying implementation class or an interface that it implements.
-     * @return an instance of the specified class 
+     * @return an instance of the specified class
      * @throws IllegalArgumentException if the provider doesn't support the specified class.
      */
     <T> T unwrap(java.lang.Class<T> cls);

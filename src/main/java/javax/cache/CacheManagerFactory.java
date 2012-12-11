@@ -8,9 +8,10 @@ package javax.cache;
 
 /**
  * Manages CacheManager instances.
- *
+ * <p/>
  * It is invoked by the {@link javax.cache.Caching} class to create
  * a {@link CacheManager}
+ *
  * @author Yannis Cosmadopoulos
  * @since 1.0
  */
@@ -21,7 +22,7 @@ public interface CacheManagerFactory {
      *
      * @param name the name of the cache manager
      * @return the named cache manager
-     * @throws NullPointerException  if name is null
+     * @throws NullPointerException if name is null
      */
     CacheManager getCacheManager(String name);
 
@@ -33,7 +34,7 @@ public interface CacheManagerFactory {
      * @param classLoader associated with the cache manager.
      * @param name        the name of the cache manager
      * @return the new cache manager
-     * @throws NullPointerException  if classLoader or name is null
+     * @throws NullPointerException if classLoader or name is null
      */
     CacheManager getCacheManager(ClassLoader classLoader, String name);
 
@@ -45,7 +46,8 @@ public interface CacheManagerFactory {
      * Subsequent requests from this factory will return different cache managers than would have been obtained before
      * shutdown.
      *
-     * @throws javax.cache.CachingShutdownException if any of the individual shutdowns failed
+     * @throws javax.cache.CachingShutdownException
+     *          if any of the individual shutdowns failed
      */
     void close() throws CachingShutdownException;
 

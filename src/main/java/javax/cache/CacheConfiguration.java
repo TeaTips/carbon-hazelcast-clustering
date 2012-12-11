@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * will vary depending on whether the cache is write-through.
  * <p/>
  * Finally, a cache makes its configuration visible via this interface.
- *
+ * <p/>
  * Only those configurations which can be changed at runtime (if supported by the underlying implementation)
  * have setters in this interface. Those that can only be set prior to cache construction have setters in
  * {@link CacheBuilder}.
@@ -105,24 +105,28 @@ public interface CacheConfiguration<K, V> {
 
     /**
      * Gets the transaction isolation level.
+     *
      * @return the isolation level. {@link javax.cache.transaction.IsolationLevel#NONE} if this cache is not transactional.
      */
     IsolationLevel getTransactionIsolationLevel();
 
     /**
      * Gets the transaction mode.
+     *
      * @return the the mode of the cache. {@link javax.cache.transaction.Mode#NONE} if this cache is not transactional.
      */
     Mode getTransactionMode();
 
     /**
      * Gets the registered {@link CacheLoader}, if any.
+     *
      * @return the {@link CacheLoader} or null if none has been set.
      */
     CacheLoader<K, ? extends V> getCacheLoader();
 
     /**
      * Gets the registered {@link CacheWriter}, if any.
+     *
      * @return the {@link CacheWriter} or null if none has been set.
      */
     CacheWriter<? super K, ? super V> getCacheWriter();
@@ -151,22 +155,22 @@ public interface CacheConfiguration<K, V> {
          */
         private final TimeUnit timeUnit;
 
-       /*
-        * How long, in the specified units, the cache entries should live.
-        * The lifetime is measured from the cache entry was last put (i.e. creation or modification for an update) or
-        * the time accessed depending on the {@link ExpiryType}
-        * 0 means eternal.
-        *
-        */
+        /*
+         * How long, in the specified units, the cache entries should live.
+         * The lifetime is measured from the cache entry was last put (i.e. creation or modification for an update) or
+         * the time accessed depending on the {@link ExpiryType}
+         * 0 means eternal.
+         *
+         */
         private final long durationAmount;
 
         /**
          * Constructs a duration.
          *
-         * @param timeUnit   the unit of time to specify time in. The minimum time unit is milliseconds.
+         * @param timeUnit       the unit of time to specify time in. The minimum time unit is milliseconds.
          * @param durationAmount how long, in the specified units, the cache entries should live. 0 means eternal.
-         * @throws NullPointerException          if timeUnit is null
-         * @throws IllegalArgumentException      if durationAmount is less than 0 or a TimeUnit less than milliseconds is specified
+         * @throws NullPointerException     if timeUnit is null
+         * @throws IllegalArgumentException if durationAmount is less than 0 or a TimeUnit less than milliseconds is specified
          */
         public Duration(TimeUnit timeUnit, long durationAmount) {
             if (timeUnit == null) {
@@ -207,14 +211,14 @@ public interface CacheConfiguration<K, V> {
 
             Duration duration = (Duration) o;
 
-            long time1 =  timeUnit.toMillis(durationAmount);
+            long time1 = timeUnit.toMillis(durationAmount);
             long time2 = duration.timeUnit.toMillis(duration.durationAmount);
             return time1 == time2;
         }
 
         @Override
         public int hashCode() {
-            return ((Long)timeUnit.toMillis(durationAmount)).hashCode();
+            return ((Long) timeUnit.toMillis(durationAmount)).hashCode();
         }
     }
 

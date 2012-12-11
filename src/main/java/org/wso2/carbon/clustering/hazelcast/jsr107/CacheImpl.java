@@ -96,7 +96,7 @@ public class CacheImpl<K, V> implements Cache<K, V> {
     private int ownerTenantId;
     private long lastAccessed = System.currentTimeMillis();
 
-    private long capacity = Long.MAX_VALUE;
+    private long capacity = CachingConstants.DEFAULT_CACHE_CAPACITY;
     private EvictionAlgorithm evictionAlgorithm = CachingConstants.DEFAULT_EVICTION_ALGORITHM;
 
     public CacheImpl(String cacheName, CacheManager cacheManager) {

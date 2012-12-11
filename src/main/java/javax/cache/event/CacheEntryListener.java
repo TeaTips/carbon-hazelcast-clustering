@@ -24,10 +24,10 @@ import java.util.EventListener;
  * <p/>
  * The listeners are fired:
  * <ul>
- *     <li>in order in which they were registered</li>
- *     <li>after the entry is mutated in the cache</li>
- *     <li>the calling thread blocks until the listener returns if the listener was registered as synchronous</li>
- *     <li>asynchronous listeners iterating through multiple events have undefined ordering</li>
+ * <li>in order in which they were registered</li>
+ * <li>after the entry is mutated in the cache</li>
+ * <li>the calling thread blocks until the listener returns if the listener was registered as synchronous</li>
+ * <li>asynchronous listeners iterating through multiple events have undefined ordering</li>
  * </ul>
  * A synchronous listener is not permitted to mutate the cache it is listening on.
  * <p/>
@@ -35,15 +35,15 @@ import java.util.EventListener;
  * and not after the transaction commits, and if asynchronous the timing is undefined. A listener which throws an exception will not affect
  * the transaction. A transaction which is rolled back will not unfire a listener.
  *
+ * @param <K> the type of keys maintained by the associated cache
+ * @param <V> the type of values maintained by the associated cache
+ * @author Yannis Cosmadopoulos
+ * @author Greg Luck
  * @see CacheEntryCreatedListener
  * @see CacheEntryUpdatedListener
  * @see CacheEntryReadListener
  * @see CacheEntryRemovedListener
  * @see CacheEntryExpiredListener
- * @param <K> the type of keys maintained by the associated cache
- * @param <V> the type of values maintained by the associated cache
- * @author Yannis Cosmadopoulos
- * @author Greg Luck
  * @since 1.0
  */
 public interface CacheEntryListener<K, V> extends EventListener {

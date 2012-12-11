@@ -37,7 +37,7 @@ public class CacheTester {
         new CacheTest().testCache();
     }*/
 
-    public void put(String manager, String cacheName, String key, int value){
+    public void put(String manager, String cacheName, String key, int value) {
 
 //        Integer value1 = cache.get(key);
 //        System.out.println("value1 = " + value1);
@@ -51,14 +51,14 @@ public class CacheTester {
         cache.put(key, value);
     }
 
-    public int get(String manager, String cacheName, String key){
+    public int get(String manager, String cacheName, String key) {
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager(manager);
         Cache<String, Integer> cache = cacheManager.getCache(cacheName);
         Integer integer = cache.get(key);
         return integer == null ? 0 : integer;
     }
 
-    public void print(String manager, String cacheName){
+    public void print(String manager, String cacheName) {
         CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager(manager);
         Cache<String, Integer> cache = cacheManager.getCache(cacheName);
         for (Cache.Entry<String, Integer> entry : cache) {

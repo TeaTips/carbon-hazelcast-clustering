@@ -16,6 +16,7 @@ package javax.cache;
  * with each.
  * <p/>
  * The {@link Status} of a newly created resource is {@link Status#UNINITIALISED}.
+ *
  * @author Greg Luck
  * @since 1.0
  */
@@ -26,7 +27,7 @@ public interface CacheLifecycle {
      * <p/>
      * This method is called during the resource's start method after it has changed its
      * status to alive. Cache operations are legal in this method.
-     *
+     * <p/>
      * At the completion of this method invocation {@link #getStatus()} must return {@link Status#STARTED}.
      *
      * @throws CacheException if ????? TODO describe when
@@ -44,7 +45,7 @@ public interface CacheLifecycle {
      * <p/>
      * Stop must free any JVM resources used.
      *
-     * @throws CacheException if ????? TODO describe when
+     * @throws CacheException        if ????? TODO describe when
      * @throws IllegalStateException thrown if an operation is performed on a cache unless it is started.
      */
     void stop();

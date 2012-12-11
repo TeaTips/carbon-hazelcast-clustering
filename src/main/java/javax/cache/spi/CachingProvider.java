@@ -12,26 +12,28 @@ import javax.cache.OptionalFeature;
 
 /**
  * Interface that should be implemented by a CacheManager factory provider.
- *
+ * <p/>
  * It is invoked by the {@link javax.cache.Caching} class to create
  * a {@link javax.cache.CacheManager}
  * <p/>
  * An implementation of this interface must have a public no-arg constructor.
  * <p/>
- * @see javax.cache.Caching
  *
  * @author Yannis Cosmadopoulos
+ * @see javax.cache.Caching
  * @since 1.0
  */
 public interface CachingProvider {
     /**
      * Returns the singleton CacheManagerFactory.
+     *
      * @return the CacheManagerFactory
      */
     CacheManagerFactory getCacheManagerFactory();
 
     /**
      * Indicates whether a optional feature is supported by this implementation
+     *
      * @param optionalFeature the feature to check for
      * @return true if the feature is supported
      */

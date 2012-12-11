@@ -12,9 +12,9 @@ package javax.cache.event;
  *
  * @param <K> the type of keys maintained by the associated cache
  * @param <V> the type of values maintained by the associated cache
- * @see CacheEntryCreatedListener
  * @author Yannis Cosmadopoulos
  * @author Greg Luck
+ * @see CacheEntryCreatedListener
  * @since 1.0
  */
 public interface CacheEntryUpdatedListener<K, V> extends CacheEntryListener<K, V> {

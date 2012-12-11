@@ -9,8 +9,9 @@ package javax.cache.transaction;
 
 /**
  * An enum for the isolation levels.
+ *
  * @author Greg Luck
- * @since  1.0
+ * @since 1.0
  */
 public enum IsolationLevel {
 
@@ -47,6 +48,7 @@ public enum IsolationLevel {
 
     /**
      * Return the constant for this isolation level defined in {@link java.sql.Connection}
+     *
      * @return the java.sql.Connection value
      */
     public int getJavaSqlConstant() {

@@ -10,6 +10,7 @@ package javax.cache.event;
 /**
  * Invoked if a cache entry is read,
  * for example through a {@link javax.cache.Cache#get(Object)} call.
+ *
  * @param <K> the type of keys maintained by the associated cache
  * @param <V> the type of values maintained by the associated cache
  * @author Yannis Cosmadopoulos

@@ -12,6 +12,7 @@ import java.util.EventObject;
 
 /**
  * A Cache event base class
+ *
  * @param <K> the type of keys maintained by this cache
  * @param <V> the type of cached values
  * @since 1.0
@@ -20,6 +21,7 @@ public abstract class CacheEntryEvent<K, V> extends EventObject {
 
     /**
      * Constructs a cache entry event from a given cache as source
+     *
      * @param source the cache that originated the event
      */
     public CacheEntryEvent(Cache source) {
@@ -36,12 +38,14 @@ public abstract class CacheEntryEvent<K, V> extends EventObject {
 
     /**
      * Returns the key of the cache entry with the event
+     *
      * @return the key
      */
     public abstract K getKey();
 
     /**
      * Returns the value of the cache entry with the event
+     *
      * @return the value
      */
     public abstract V getValue();

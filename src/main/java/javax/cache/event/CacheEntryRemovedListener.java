@@ -23,8 +23,8 @@ public interface CacheEntryRemovedListener<K, V> extends CacheEntryListener<K, V
      * Called after the entry has been removed. If no entry existed for key the event is not called.
      *
      * @param event The entry just removed.
-     * @see #entryRemoved(CacheEntryEvent)
      * @throws CacheEntryListenerException if there is problem executing the listener
+     * @see #entryRemoved(CacheEntryEvent)
      */
     void entryRemoved(CacheEntryEvent<? extends K, ? extends V> event) throws CacheEntryListenerException;
 

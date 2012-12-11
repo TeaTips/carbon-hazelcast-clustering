@@ -57,8 +57,8 @@ public final class Util {
         return carbonContext;
     }
 
-    public static String getTenantDomain(){
-       return getCarbonContext().getTenantDomain();
+    public static String getTenantDomain() {
+        return getCarbonContext().getTenantDomain();
     }
 
     private Util() {

@@ -35,6 +35,7 @@ public class CacheManagerFactoryImpl implements CacheManagerFactory {
 
     private static CacheCleanupTask cacheCleanupTask = new CacheCleanupTask();
     private static Random randomGenerator = new Random();
+
     static {
         ScheduledExecutorService cacheExpiryScheduler = Executors.newScheduledThreadPool(10, new ThreadFactory() {
             @Override

@@ -15,9 +15,9 @@ import java.util.Date;
  * Statistics are accumulated from the time a cache is created. They can be reset to zero using {@link #clear}.
  * <p/>
  * There are no defined consistency semantics for statistics. Refer to the implementation for precise semantics.
+ *
  * @author Greg Luck
  * @since 1.0
- *
  */
 public interface CacheStatistics {
 
@@ -46,7 +46,7 @@ public interface CacheStatistics {
 
     /**
      * This is a measure of cache efficiency.
-     *
+     * <p/>
      * It is calculated as {@link #getCacheHits} divided by {@link #getCacheGets()} * 100.
      *
      * @return the percentage of successful hits, as a decimal e.g 75.
@@ -72,7 +72,7 @@ public interface CacheStatistics {
 
     /**
      * Returns the percentage of cache accesses that did not find a requested entry in the cache.
-     *
+     * <p/>
      * This is calculated as {@link #getCacheMisses()} divided by {@link #getCacheGets()} * 100.
      *
      * @return the percentage of accesses that failed to find anything
@@ -87,7 +87,6 @@ public interface CacheStatistics {
      * <p/>
      * In a caches with multiple tiered storage, a gets may be implemented as a get to the cache or to the first tier.
      *
-     *
      * @return the number of gets
      */
     long getCacheGets();
@@ -96,7 +95,7 @@ public interface CacheStatistics {
      * The total number of puts to the cache.
      * <p/>
      * A put is counted even if it is immediately evicted.
-     *
+     * <p/>
      * Replaces, where a put occurs which overrides an existing mapping is counted as a put.
      *
      * @return the number of hits

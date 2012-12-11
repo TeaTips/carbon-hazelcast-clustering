@@ -28,21 +28,21 @@ class SerializableTestObject implements Serializable {
     private String address;
     private Long id;
 
-     SerializableTestObject(String name, String address, Long id) {
+    SerializableTestObject(String name, String address, Long id) {
         this.name = name;
         this.address = address;
         this.id = id;
     }
 
-     String getName() {
+    String getName() {
         return name;
     }
 
-     String getAddress() {
+    String getAddress() {
         return address;
     }
 
-     Long getId() {
+    Long getId() {
         return id;
     }
 }

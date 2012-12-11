@@ -58,7 +58,7 @@ public class MulticastBasedMembershipScheme implements HazelcastMembershipScheme
     private void configureMulticastParameters() throws ClusteringFault {
         Parameter mcastAddress = getParameter(MulticastConstants.MULTICAST_ADDRESS);
         if (mcastAddress != null) {
-            config.setMulticastGroup((String)mcastAddress.getValue());
+            config.setMulticastGroup((String) mcastAddress.getValue());
         }
         Parameter mcastPort = getParameter(MulticastConstants.MULTICAST_PORT);
         if (mcastPort != null) {
@@ -94,7 +94,7 @@ public class MulticastBasedMembershipScheme implements HazelcastMembershipScheme
     }
 
     private class MulticastMembershipListener implements MembershipListener {
-        private Map<String , org.apache.axis2.clustering.Member> members;
+        private Map<String, org.apache.axis2.clustering.Member> members;
 
         public MulticastMembershipListener() {
             members = MemberUtils.getMembersMap(primaryHazelcastInstance, primaryDomain);
@@ -103,13 +103,13 @@ public class MulticastBasedMembershipScheme implements HazelcastMembershipScheme
         @Override
         public void memberAdded(MembershipEvent membershipEvent) {
             Member member = membershipEvent.getMember();
-            log.info("Member joined [" +  member.getUuid() + "]: " + member.getInetSocketAddress().toString());
+            log.info("Member joined [" + member.getUuid() + "]: " + member.getInetSocketAddress().toString());
         }
 
         @Override
         public void memberRemoved(MembershipEvent membershipEvent) {
             Member member = membershipEvent.getMember();
-            log.info("Member left [" +  member.getUuid() + "]: " + member.getInetSocketAddress().toString());
+            log.info("Member left [" + member.getUuid() + "]: " + member.getInetSocketAddress().toString());
             members.remove(member.getUuid());
         }
     }

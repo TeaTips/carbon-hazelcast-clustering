@@ -22,6 +22,7 @@ import javax.management.MXBean;
  * <li>CacheManager Name
  * <li>Cache Name
  * </ul>
+ *
  * @author Greg Luck
  * @author Yannis Cosmadopoulos
  * @since 1.0

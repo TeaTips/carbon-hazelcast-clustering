@@ -85,7 +85,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
         for (org.apache.axis2.clustering.Member wkaMember : wkaMembers) {
 
             // if (wkaMember.equals(localMember) continue;
-            if(isLocalMember(wkaMember)){
+            if (isLocalMember(wkaMember)) {
                 continue;
             }
             if (MemberUtils.canConnect(wkaMember)) {
@@ -100,7 +100,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
 
     private boolean isLocalMember(Member member) {
         return member.getHostName().equals(nwConfig.getPublicAddress()) &&
-                member.getPort() == nwConfig.getPort();
+               member.getPort() == nwConfig.getPort();
     }
 
     private void startWKAMemberReconnectionTask(Member wkaMember) {
@@ -158,7 +158,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
         for (Member member : allMembers.values()) {
             InetSocketAddress inetSocketAddress = localMember.getInetSocketAddress();
             if (!member.getHostName().equals(inetSocketAddress.getHostName()) &&
-                    member.getPort() != inetSocketAddress.getPort()) {  // Don't add the local member
+                member.getPort() != inetSocketAddress.getPort()) {  // Don't add the local member
                 MemberUtils.addMember(member, nwConfig.getJoin().getTcpIpConfig());
             }
         }
@@ -185,7 +185,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
 
             // If the member who left is a WKA member, try to keep reconnecting to it
             Member member = allMembers.get(membershipEvent.getMember().getUuid());
-            if(member == null) {
+            if (member == null) {
                 return;
             }
             boolean isWKAMember = false;
@@ -200,7 +200,7 @@ public class WKABasedMembershipScheme implements HazelcastMembershipScheme {
                     break;
                 }
             }
-            if(!isWKAMember){
+            if (!isWKAMember) {
                 allMembers.remove(uuid);
             }
         }
