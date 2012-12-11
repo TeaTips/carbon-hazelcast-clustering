@@ -17,8 +17,28 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107.eviction;
 
+import org.wso2.carbon.clustering.hazelcast.jsr107.CacheEntry;
+import org.wso2.carbon.clustering.hazelcast.jsr107.CacheImpl;
+
+import java.util.Iterator;
+
 /**
  * TODO: class description
  */
 public class LeastRecentlyUsedEvictionAlgorithm implements EvictionAlgorithm {
+
+    public void evict(CacheImpl cache) {
+        CacheEntry lruCacheEntry = null;
+        for (Iterator<CacheEntry> iter = cache.getAll().iterator(); iter.hasNext(); ) {
+            CacheEntry cacheEntry = iter.next();
+            if (lruCacheEntry == null) {
+                lruCacheEntry = cacheEntry;
+            } else if (lruCacheEntry.getLastAccessed() < cacheEntry.getLastAccessed()) {
+                lruCacheEntry = cacheEntry;
+            }
+        }
+        if (lruCacheEntry != null) {
+            cache.evict(lruCacheEntry);
+        }
+    }
 }

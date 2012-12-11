@@ -17,8 +17,13 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107.eviction;
 
+import org.wso2.carbon.clustering.hazelcast.jsr107.CacheImpl;
+
 /**
  * TODO: class description
  */
 public interface EvictionAlgorithm {
+
+    void evict(CacheImpl cache);
+
 }
