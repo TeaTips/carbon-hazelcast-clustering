@@ -20,22 +20,28 @@ package org.wso2.carbon.clustering.hazelcast.jsr107.eviction;
 import org.wso2.carbon.clustering.hazelcast.jsr107.CacheEntry;
 import org.wso2.carbon.clustering.hazelcast.jsr107.CacheImpl;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Random;
 
 /**
  * TODO: class description
  */
-public class LeastRecentlyUsedEvictionAlgorithm implements EvictionAlgorithm {
+public class RandomEvictionAlgorithm implements EvictionAlgorithm {
 
     public void evict(CacheImpl cache) {
         CacheEntry lruCacheEntry = null;
-        for (Iterator iter = cache.getAll().iterator(); iter.hasNext(); ) {
+        Collection all = cache.getAll();
+        int evictionIndex = new Random().nextInt(all.size());
+        int index = 0;
+
+        for (Iterator iter = all.iterator(); iter.hasNext(); ) {
             CacheEntry cacheEntry = (CacheEntry) iter.next();
-            if (lruCacheEntry == null) {
+            if (index == evictionIndex) {
                 lruCacheEntry = cacheEntry;
-            } else if (lruCacheEntry.getLastAccessed() < cacheEntry.getLastAccessed()) {
-                lruCacheEntry = cacheEntry;
+                break;
             }
+            index++;
         }
         if (lruCacheEntry != null) {
             cache.evict(lruCacheEntry.getKey());

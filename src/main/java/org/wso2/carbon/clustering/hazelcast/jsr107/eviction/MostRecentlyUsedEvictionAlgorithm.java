@@ -25,20 +25,20 @@ import java.util.Iterator;
 /**
  * TODO: class description
  */
-public class LeastRecentlyUsedEvictionAlgorithm implements EvictionAlgorithm {
+public class MostRecentlyUsedEvictionAlgorithm implements EvictionAlgorithm {
 
     public void evict(CacheImpl cache) {
-        CacheEntry lruCacheEntry = null;
+        CacheEntry mruCacheEntry = null;
         for (Iterator iter = cache.getAll().iterator(); iter.hasNext(); ) {
             CacheEntry cacheEntry = (CacheEntry) iter.next();
-            if (lruCacheEntry == null) {
-                lruCacheEntry = cacheEntry;
-            } else if (lruCacheEntry.getLastAccessed() < cacheEntry.getLastAccessed()) {
-                lruCacheEntry = cacheEntry;
+            if (mruCacheEntry == null) {
+                mruCacheEntry = cacheEntry;
+            } else if (mruCacheEntry.getLastAccessed() > cacheEntry.getLastAccessed()) {
+                mruCacheEntry = cacheEntry;
             }
         }
-        if (lruCacheEntry != null) {
-            cache.evict(lruCacheEntry.getKey());
+        if (mruCacheEntry != null) {
+            cache.evict(mruCacheEntry.getKey());
         }
     }
 }

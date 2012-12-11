@@ -32,8 +32,7 @@ public class EvictionUtil {
         String cacheManagerName = cacheManager.getName();
         String cacheName = cache.getName();
         synchronized ((ownerTenantId + "." + cacheManagerName + "." + cacheName).intern()) {
-
-            //TODO: impl
+            algorithm.evict(cache);
         }
     }
 }
