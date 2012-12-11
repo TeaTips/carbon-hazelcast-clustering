@@ -65,6 +65,10 @@ public class HazelcastCacheManager implements CacheManager {
         status = Status.STARTED;
     }
 
+    public int getOwnerTenantId() {
+        return ownerTenantId;
+    }
+
     @Override
     public String getName() {
         Util.checkAccess(ownerTenantDomain, ownerTenantId);
@@ -155,7 +159,7 @@ public class HazelcastCacheManager implements CacheManager {
             oldCache.stop();
         }
         cacheManagerFactory.removeCacheFromMonitoring(oldCache);
-        if(caches.isEmpty()){
+        if (caches.isEmpty()) {
             cacheManagerFactory.removeCacheManager(this, ownerTenantDomain);
         }
         return oldCache != null;

@@ -17,8 +17,22 @@
 */
 package org.wso2.carbon.clustering.hazelcast.jsr107.eviction;
 
+import org.wso2.carbon.clustering.hazelcast.jsr107.CacheImpl;
+import org.wso2.carbon.clustering.hazelcast.jsr107.HazelcastCacheManager;
+
 /**
  * TODO: class description
  */
 public class EvictionUtil {
+
+    public static void evict(CacheImpl cache, EvictionAlgorithm algorithm) {
+
+        HazelcastCacheManager cacheManager = (HazelcastCacheManager) cache.getCacheManager();
+        int ownerTenantId = cacheManager.getOwnerTenantId();
+        String cacheManagerName = cacheManager.getName();
+        String cacheName = cache.getName();
+        synchronized ((ownerTenantId + "." + cacheManagerName + "." + cacheName).intern()) {
+
+        }
+    }
 }
