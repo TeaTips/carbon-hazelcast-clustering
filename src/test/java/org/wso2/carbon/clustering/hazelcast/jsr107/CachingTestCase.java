@@ -357,4 +357,16 @@ public class CachingTestCase {
         assertEquals(cache.get(key3).intValue(), value3);
         assertEquals(((CacheImpl) cache).getAll().size(), 2);
     }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testDefaultCacheEviction() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testDefaultCacheEviction-manager");
+        String cacheName = "testDefaultCacheEviction";
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
+        for (int i = 0; i < 10000; i++) {
+            cache.put("key" + i, i);
+        }
+        assertEquals(((CacheImpl) cache).getAll().size(), CachingConstants.DEFAULT_CACHE_CAPACITY);
+    }
 }
