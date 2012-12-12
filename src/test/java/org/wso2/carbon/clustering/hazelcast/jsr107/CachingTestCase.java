@@ -369,4 +369,30 @@ public class CachingTestCase {
         }
         assertEquals(((CacheImpl) cache).getAll().size(), CachingConstants.DEFAULT_CACHE_CAPACITY);
     }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testDefaultMRUCacheEviction() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testDefaultMRUCacheEviction-manager");
+        String cacheName = "testDefaultMRUCacheEviction";
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
+        ((CacheImpl) cache).setEvictionAlgorithm(new MostRecentlyUsedEvictionAlgorithm());
+        for (int i = 0; i < 10000; i++) {
+            cache.put("key" + i, i);
+        }
+        assertEquals(((CacheImpl) cache).getAll().size(), CachingConstants.DEFAULT_CACHE_CAPACITY);
+    }
+
+    @Test(groups = {"org.wso2.carbon.clustering.hazelcast.jsr107"},
+          description = "")
+    public void testDefaultRandomCacheEviction() {
+        CacheManager cacheManager = Caching.getCacheManagerFactory().getCacheManager("testDefaultRandomCacheEviction-manager");
+        String cacheName = "testDefaultRandomCacheEviction";
+        Cache<String, Integer> cache = cacheManager.getCache(cacheName);
+        ((CacheImpl) cache).setEvictionAlgorithm(new RandomEvictionAlgorithm());
+        for (int i = 0; i < 10000; i++) {
+            cache.put("key" + i, i);
+        }
+        assertEquals(((CacheImpl) cache).getAll().size(), CachingConstants.DEFAULT_CACHE_CAPACITY);
+    }
 }
